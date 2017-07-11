@@ -1,9 +1,11 @@
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromTable.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/LocalWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromBQuery.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryRandom.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromBQ.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/MinimalWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/ExampleBigQueryTableOptions.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportAsCSV.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/DebuggingWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/PubsubFileInjector.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes.java

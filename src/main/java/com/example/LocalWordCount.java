@@ -23,6 +23,7 @@ public class LocalWordCount {
 			}
 		}
 	}
+
 	
 	static class FormatText extends DoFn<KV<String, Long>, String>{
 		@Override
