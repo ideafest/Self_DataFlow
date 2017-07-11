@@ -10,6 +10,7 @@ import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 
 public class ExportFromBQ {
 	
@@ -30,13 +31,15 @@ public class ExportFromBQ {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			String element = context.element();
-			File file = new File("/home/zimetrics/Documents/query.txt");
+			File file = new File("/home/zimetrics/Documents/exports.txt");
 			try{
 				BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-				writer.write(context.element());
+				writer.write(element);
 				writer.newLine();
+				writer.close();
+				context.output(file);
 			}
-			catch (Exception e){}
+			catch (IOException e){}
 		}
 	}
 	
