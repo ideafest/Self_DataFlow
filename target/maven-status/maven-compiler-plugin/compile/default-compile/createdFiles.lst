@@ -31,12 +31,14 @@ com/example/BigQueryTornadoes$CountTornadoes.class
 com/example/BQJoin$ExtractFromSource_2.class
 com/example/DebuggingWordCount.class
 com/example/BigQueryRandom$FormatOutput.class
+com/example/ExportAsCSV$ExtractFromTable.class
+com/example/ExportAsCSV$Options.class
 com/example/BQJoin$Options.class
 com/example/BQJoin.class
 com/example/WindowedWordCount.class
 com/example/WordCount$WordCountOptions.class
 com/example/common/PubsubFileInjector$Unbound.class
-com/example/ExportFromBQ$Writer.class
+com/example/ExportAsCSV.class
 com/example/common/DataflowExampleOptions.class
 com/example/MinimalWordCount.class
 com/example/BigQueryTornadoes$Options.class

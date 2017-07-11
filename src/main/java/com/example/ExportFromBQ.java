@@ -3,14 +3,13 @@ package com.example;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.options.*;
+import com.google.cloud.dataflow.sdk.io.TextIO;
+import com.google.cloud.dataflow.sdk.options.Default;
+import com.google.cloud.dataflow.sdk.options.Description;
+import com.google.cloud.dataflow.sdk.options.PipelineOptions;
+import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 
 public class ExportFromBQ {
 	
@@ -22,37 +21,16 @@ public class ExportFromBQ {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			context.output((String)row.get("word"));
+			context.output((String) row.get("word"));
 		}
 	}
 	
-	static class Writer extends DoFn<String, File>{
-		
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			String element = context.element();
-			File file = new File("/home/zimetrics/Documents/exports.txt");
-			try{
-				BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-				writer.write(element);
-				writer.newLine();
-				writer.close();
-				context.output(file);
-			}
-			catch (IOException e){}
-		}
-	}
 	
 	private interface BQOptions extends PipelineOptions {
 		@Description("Source")
 		@Default.String(source)
 		String getInput();
 		void setInput(String value);
-		
-		@Description("Destination")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String value);
 	}
 	
 	public static void main(String[] args) {
@@ -61,7 +39,7 @@ public class ExportFromBQ {
 		
 		pipeline.apply(BigQueryIO.Read.named("Reader").from(options.getInput()))
 				.apply(ParDo.of(new ExtractData()))
-				.apply(ParDo.of(new Writer()));
+				.apply(TextIO.Write.named("Writing").to("/home/zimetrics/Documents/exported.txt"));
 		
 		pipeline.run();
 	}
