@@ -18,9 +18,6 @@ import java.util.List;
 
 public class BigQueryTornadoes {
 	
-	private static final java.io.File DATA_STORE_DIR = new java.io.File(
-			System.getProperty("user.home"), ".credentials/2/sheets.googleapis.com-java-quickstart.json");
-	
 	private static final String WEATHER_SAMPLES_TABLE =	"clouddataflow-readonly:samples.weather_stations";
 	
 	static class ExtractTornadoesFn extends DoFn<TableRow, Integer> {
