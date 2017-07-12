@@ -228,5 +228,16 @@
         <artifactId>google-cloud-bigquery</artifactId>
         <version>0.17.2-beta</version>
       </dependency>
+    <dependency>
+      <groupId>com.google.cloud.dataflow</groupId>
+      <artifactId>google-cloud-dataflow-java-sdk-all</artifactId>
+      <version>1.9.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.auth</groupId>
+          <artifactId>google-auth-library-oauth2-http</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 </project>
