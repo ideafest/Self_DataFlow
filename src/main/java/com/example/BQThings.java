@@ -16,12 +16,11 @@ public class BQThings {
 		
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable("Learning","shakespeare_copy");
+		Table table = bigQuerySnippets.getTable("Learning","weather_stations_copy");
 		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
 		List<String> fieldNames = new ArrayList<>();
 		
 		for (Field field : fieldSchemas){
-			System.out.println(field.getName() + ", " + field.getType().getValue());
 			fieldNames.add(field.getName());
 		}
 		

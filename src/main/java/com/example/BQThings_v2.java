@@ -36,9 +36,11 @@ public class BQThings_v2 {
 		public void processElement(ProcessContext context) throws Exception {
 			getTableFields();
 			TableRow row = context.element();
-			for (String field : fieldNames){
-				context.output(row.get(field) +", ");
+			String str = "";
+			for (String field : fieldNames) {
+				str += row.get(field) + ", ";
 			}
+			context.output(str);
 		}
 	}
 	
@@ -54,8 +56,6 @@ public class BQThings_v2 {
 		
 		BQOptions bqOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(BQOptions.class);
 		Pipeline pipeline = Pipeline.create(bqOptions);
-		
-		
 		
 		pipeline.apply(BigQueryIO.Read.named("Reader").from(bqOptions.getInput()))
 				.apply(ParDo.of(new ExtractTableData()))
