@@ -7,6 +7,7 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/ExamplePubsubTopicOptions.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/LocalMinimalWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQuerySnippets.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideFilter.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQThings.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideViewTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/DataflowExampleUtils.java

@@ -20,6 +20,7 @@ com/example/SideViewTrial$ExtractWordLen.class
 com/example/common/PubsubFileInjector.class
 com/example/common/ExampleBigQueryTableOptions.class
 com/example/BQJoin$2.class
+com/example/SideFilter$Options.class
 com/example/WordCount$FormatAsTextFn.class
 com/example/LocalMinimalWordCount$2.class
 com/example/DebuggingWordCount$WordCountOptions.class
