@@ -18,17 +18,18 @@ import java.util.List;
 
 public class BQuery {
 	
-	private static final String query = "SELECT word  FROM [zimetrics:Learning.shakespeare_copy] LIMIT 20";
+	private static final String query = "SELECT\n" +
+			"  word,\n" +
+			"  COUNT(word) as wordCount\n" +
+			"FROM\n" +
+			"  [zimetrics:Learning.shakespeare_copy]\n" +
+			"GROUP BY\n" +
+			"  word\n" +
+			"LIMIT\n" +
+			"  1000";
 	private static final String sourceTable = "zimetrics:Learning.shakespeare_copy";
-	
-	private interface Options extends PipelineOptions{
-		@Description("Input path")
-		@Default.String(sourceTable)
-		String getInput();
-		void setInput(String value);
-	}
-	
-	private static class ExctractWords extends DoFn<TableRow, String>{
+
+	private static class ExtractWords extends DoFn<TableRow, String>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
@@ -37,11 +38,17 @@ public class BQuery {
 		}
 	}
 	
+	private static class ExtractAndSend extends DoFn<TableRow, TableRow>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			context.output(context.element());
+		}
+	}
 	
 	public static class doThatOperation extends PTransform<PCollection<TableRow>, PCollection<TableRow>> {
 		@Override
 		public PCollection<TableRow> apply(PCollection<TableRow> inputTable){
-			PCollection<String> rows = inputTable.apply(ParDo.of(new ExctractWords()));
+			PCollection<String> rows = inputTable.apply(ParDo.of(new ExtractWords()));
 			PCollection<KV<String, Long>> counted = rows.apply(Count.<String>perElement());
 			PCollection<TableRow> returnThisVar = counted.apply(ParDo.of(new DoFn<KV<String, Long>, TableRow>() {
 				@Override
@@ -60,7 +67,7 @@ public class BQuery {
 	
 	public static void main(String[] args) {
 		
-		Options pipelineOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+		DataflowPipelineOptions pipelineOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(DataflowPipelineOptions.class);
 		
 		Pipeline pipeline = Pipeline.create(pipelineOptions);
 		
@@ -70,10 +77,10 @@ public class BQuery {
 		TableSchema schema = new TableSchema().setFields(schemaList);
 		
 		pipeline.apply(BigQueryIO.Read.fromQuery(query))
-			//	.apply(new doThatOperation())
+				.apply(ParDo.of(new ExtractAndSend()))
 				.apply(BigQueryIO.Write.to("zimetrics:Learning.word_count")
 				.withSchema(schema)
-				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_APPEND)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
 				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
 		
 		pipeline.run();
