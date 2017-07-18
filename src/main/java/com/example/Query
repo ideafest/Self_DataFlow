@@ -1,0 +1,869 @@
+select *
+from
+(
+SELECT
+      A.campaignid as campaignid,
+      A.campaign as campaign,
+      A.rownum as rownum,
+      cast(date(A.batch_date) as date) as batch_date,
+      A.prospectcallid as prospectcallid,
+      A.prospectinteractionsessionid as prospectinteractionsessionid,
+      A.DNI as DNI,
+      cast(date(A.updateddate) as date) AS record_date,
+      A.updateddate as record_datetime,
+      cast(date(A.updateddate) as date) AS call_date,
+      A.updateddate AS call_datetime,
+      cast(date(A.callstartdate) as date) as callstartdate,
+      A.prospecthandledurationformatted as prospecthandledurationformatted,
+      A.voicedurationformatted as voicedurationformatted,
+      E.name as status,
+      nvl(F.name, 'Not Available') as dispositionstatus,
+      nvl(G.name, 'Not Available')  as substatus,
+      A.recordingurl as recordingurl,
+      A.twiliocallsid as twiliocallsid,
+      A.deliveredassetid as deliveredassetid,
+      A.callbackdate as callbackdate,
+      A.outboundnumber as outboundnumber,
+      A.latestprospectidentitychangelogid as latestprospectidentitychangelogid,
+      A.callretrycount as callretrycount,
+      A.dnc_note as dnc_note,
+      A.dnc_trigger as dnc_trigger,
+      C.AgentName as AgentName,
+      C.QAName as QAName,
+      C._id as _id,
+      C.callstarttime as callstarttime,
+      C.qaid as qaid,
+      C.overallscore as overallscore,
+      case when C.STATUS = 'QA_INITIATED' then 'QA Initiated'
+           when C.STATUS = 'QA_COMPLETE' then 'QA Completed'
+           when A.STATUS = 'WRAPUP_COMPLETE' and A.dispositionstatus in ('SUCCESS', 'FAILURE') then 'QA Pending'
+           else null
+      end as qastatus,
+      C.feedbackdate as feedbackdate,
+      C.feedbacktime as feedbacktime,
+      C.clintOfferAndsend as clintOfferAndsend,
+      C.Salesmanship as Salesmanship,
+      C.CallClosing as CallClosing,
+      C.Introduction as Introduction,
+      C.PhoneEtiquette as PhoneEtiquette,
+      C.LeadValidation as LeadValidation,
+      C.PHONEETIQUETTE_CUSTOMER_ENGAGEMENT as PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+      C.PHONEETIQUETTE_PROFESSIONALISM as PHONEETIQUETTE_PROFESSIONALISM,
+      C.SALESMANSHIP_REBUTTAL_USE as SALESMANSHIP_REBUTTAL_USE,
+      C.SALESMANSHIP_PROVIDE_INFORMATION as SALESMANSHIP_PROVIDE_INFORMATION,
+      C.INTRODUCTION_BRANDING_PERSONAL_CORPORATE as INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+      C.INTRODUCTION_MARKETING_EFFORTS as INTRODUCTION_MARKETING_EFFORTS,
+      C.CUSTOMERSATISFACTION_OVERALL_SERVICE as CUSTOMERSATISFACTION_OVERALL_SERVICE,
+      C.CLIENT_FULL_DETAILS as CLIENT_FULL_DETAILS,
+      C.CLIENT_PII as CLIENT_PII,
+      C.CALLCLOSING_BRANDING_PERSONAL_CORPORATE as CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+      C.PHONEETIQUETTE_CALL_PACING as PHONEETIQUETTE_CALL_PACING,
+      C.PHONEETIQUETTE_CALL_HOLD_PURPOSE as PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+      C.SALESMANSHIP_PREQUALIFICATION_QUESTIONS as SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+      C.INTRODUCTION_PREPARE_READY as INTRODUCTION_PREPARE_READY,
+      C.INTRODUCTION_CALL_RECORD as INTRODUCTION_CALL_RECORD,
+      C.CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL as CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+      C.CLIENT_POSTQUALIFICATION_QUESTIONS as CLIENT_POSTQUALIFICATION_QUESTIONS,
+      C.CLIENT_OBTAIN_CUSTOMER_CONSENT as CLIENT_OBTAIN_CUSTOMER_CONSENT,
+      C.CALLCLOSING_EXPECTATION_SETTING as CALLCLOSING_EXPECTATION_SETTING,
+      C.CALLCLOSING_REDIAL_NUMBER as CALLCLOSING_REDIAL_NUMBER,
+      C.LEAD_VALIDATION_VALID as LEAD_VALIDATION_VALID,
+      C.lead_validation_notes as lead_validation_notes,
+      D.Revenue as Revenue,
+      D.EventTimeline as EventTimeline,
+      D.Industry as Industry,
+      D.industrylist as industrylist,
+      D.Budget as Budget,
+      D.CurrentlyEvaluatingCallAnalytics as CurrentlyEvaluatingCallAnalytics,
+      D.Department as Department,
+      D.Title as Title,
+      D.NumberOfEmployees as NumberOfEmployees,
+      D.Country as Country,
+
+      nth(1,split(D.industrylist,',')) as industry1,
+      nth(2,split(D.industrylist,',')) as industry2,
+      nth(3,split(D.industrylist,',')) as industry3,
+      nth(4,split(D.industrylist,',')) as industry4,
+
+      case when A.substatus='CALLBACK_USER_GENERATED' then 1 else 0 end as interaction_callback,
+      case when A.dispositionstatus='SUCCESS' then 1 else 0 end as interaction_success,
+      case when A.dispositionstatus='FAILURE' then 1 else 0 end as interaction_failure,
+
+      case when A.dispositionstatus = 'DIALERCODE' then 1
+            else 0
+      end as interaction_dialercode,
+
+      case when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'SUCCESS' then 1
+            when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'FAILURE'
+                 and A.substatus in ('DNCL', 'DNRM', 'FAILED_QUALIFICATION', 'NO_CONSENT', 'NOTINTERESTED', 'OTHER', 'OUT_OF_COUNTRY', 'PROSPECT_UNREACHABLE') then 1
+            when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'CALLBACK'
+                 and A.substatus IN ('CALLBACK_USER_GENERATED', 'CALLBACK_GATEKEEPER') then 1
+            when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'DIALERCODE'
+                 and A.substatus = 'GATEKEEPER_ANSWERMACHINE' then 1
+            else 0
+      end as interaction_contact,
+
+      case when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'SUCCESS' then A.prospectcallid
+           when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'FAILURE'
+                  and A.substatus in ('DNCL', 'DNRM', 'FAILED_QUALIFICATION', 'NO_CONSENT', 'NOTINTERESTED', 'OTHER', 'OUT_OF_COUNTRY', 'PROSPECT_UNREACHABLE') then A.prospectcallid
+            when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'CALLBACK'
+                 and A.substatus IN ('CALLBACK_USER_GENERATED', 'CALLBACK_GATEKEEPER') then A.prospectcallid
+            when A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'DIALERCODE'
+                 and A.substatus = 'GATEKEEPER_ANSWERMACHINE' then A.prospectcallid
+            else null
+      end as interaction_contact_pcid,
+
+      case when A.status='MAX_RETRY_LIMIT_REACHED' then 1 else 0 end as interaction_max_retry_limit_reached,
+      case when A.status='LOCAL_DNC_ERROR' then 1 else 0 end as interaction_LOCAL_DNC_ERROR,
+      case when A.status='NATIONAL_DNC_ERROR' then 1 else 0 end as interaction_NATIONAL_DNC_ERROR,
+      case when A.status='CALL_ABANDONED' then 1 else 0 end as interaction_CALL_ABANDONED,
+      case when C.status='QA_COMPLETE' then 1 else 0 end as interaction_qa_count,
+
+      case when A.prospectinteractionsessionid is not null then 1 else 0 end as interaction_call_count,
+
+      case when A.substatus='ANSWERMACHINE' then 1 else 0 end as interaction_answer_machine,
+      case when A.substatus='BUSY' then 1 else 0 end as interaction_busy,
+      case when A.substatus='NOANSWER' then 1 else 0 end as interaction_no_answer,
+      case when A.substatus='NO_LONGER_EMPLOYED' then 1 when A.substatus='PROSPECT_UNREACHABLE' then 1 else 0 end as interaction_unreachable,
+
+      case when A.status_seq > 3 then 1 else 0 end as call_attempted,
+      case when A.status_seq > 3 then A.prospectcallid else null end as interaction_pcid,
+
+      case when A.rownum = 1 and A.status = 'QUEUED' then 1
+           when A.rownum = 1 and A.dispositionstatus = 'CALLBACK' then 1
+           when A.rownum = 1 and (A.dispositionstatus = 'DIALERCODE' and A.substatus not in ('DIALERMISDETECT','ANSWERMACHINE'))then 1
+           else 0
+      end as queued,
+
+      case when concat(string(A.rownum),A.substatus)='1CALLBACK_USER_GENERATED' then 1 else 0 end as prospect_callback,
+      case when concat(string(A.rownum),A.dispositionstatus)='1SUCCESS' then 1 else 0 end as prospect_success,
+      case when concat(string(A.rownum),A.dispositionstatus)='1FAILURE' then 1 else 0 end as prospect_failure,
+
+      case when A.rownum = 1 and A.dispositionstatus = 'DIALERCODE' then 1
+           else 0
+      end as prospect_dialercode,
+
+     case when A.rownum = 1 and (A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'SUCCESS') then 1
+          when A.rownum = 1 and ((A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'FAILURE')
+                 and A.substatus in ('DNCL', 'DNRM', 'FAILED_QUALIFICATION', 'NO_CONSENT', 'NOTINTERESTED')) then 1
+          when A.rownum = 1 and (A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND
+               A.dispositionstatus = 'CALLBACK' and A.substatus = 'CALLBACK_USER_GENERATED') then 1
+                else 0
+          end as prospect_contact,
+
+     case when A.rownum = 1 and (A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'SUCCESS') then A.prospectcallid
+          when A.rownum = 1 and (A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND A.dispositionstatus = 'FAILURE'
+               and A.substatus in ('DNCL', 'DNRM', 'FAILED_QUALIFICATION', 'NO_CONSENT', 'NOTINTERESTED')) then A.prospectcallid
+          when A.rownum = 1 and (A.status IN ('WRAPUP_COMPLETE', 'QA_INITIATED', 'QA_COMPLETE') AND
+                 A.dispositionstatus = 'CALLBACK' and A.substatus = 'CALLBACK_USER_GENERATED') then A.prospectcallid
+          else null
+          end as prospect_contact_pcid,
+
+        case when concat(string(A.rownum),A.substatus)='1DNCL' then 1 else 0 end as dnc_added,
+        case when concat(string(A.rownum),A.status)='1MAX_RETRY_LIMIT_REACHED' then 1 else 0 end as prospect_max_retry_limit_reached,
+        case when concat(string(A.rownum),A.status)='1LOCAL_DNC_ERROR' then 1 else 0 end as prospect_LOCAL_DNC_ERROR,
+        case when concat(string(A.rownum),A.status)='1NATIONAL_DNC_ERROR' then 1 else 0 end as prospect_NATIONAL_DNC_ERROR,
+        case when concat(string(A.rownum),A.status)='1CALL_ABANDONED' then 1 else 0 end as prospect_CALL_ABANDONED,
+        case when concat(string(A.rownum),C.status)='1QA_COMPLETE' then 1 else 0 end as prospect_qa_count,
+
+        case when A.rownum=1 then 1 else 0 end as prospect_count,
+
+
+        case when concat(string(A.rownum),A.substatus)='1BADNUMBER' then 1 when concat(string(A.rownum),A.substatus)='FAKENUMBER' then 1 else 0 end as bad_record,
+
+        case when concat(string(A.rownum),A.substatus)='1ANSWERMACHINE' then 1 else 0 end as prospect_answer_machine,
+        case when concat(string(A.rownum),A.substatus)='1BUSY' then 1 else 0 end as prospect_busy,
+        case when concat(string(A.rownum),A.substatus)='1NOANSWER' then 1 else 0 end as prospect_no_answer,
+        case when concat(string(A.rownum),A.substatus)='1NO_LONGER_EMPLOYED' then 1 when concat(string(A.rownum),A.substatus)='1PROSPECT_UNREACHABLE' then 1 else 0 end as prospect_unreachable,
+
+      case when A.status in('UNKNOWN_ERROR','QUEUED','MAX_RETRY_LIMIT_REACHED','LOCAL_DNC_ERROR','CALL_TIME_RESTRICTION','CALL_NO_ANSWER',
+                            'CALL_FAILED','CALL_CANCELED','CALL_BUSY', 'CALL_ABANDONED', 'NATIONAL_DNC_ERROR') then 0 else A.prospecthandleduration end AS prospecthandleduration,
+
+      case when A.status in('UNKNOWN_ERROR','QUEUED','MAX_RETRY_LIMIT_REACHED','LOCAL_DNC_ERROR','CALL_TIME_RESTRICTION','CALL_NO_ANSWER','CALL_FAILED',
+                                        'CALL_CANCELED','CALL_BUSY','CALL_ABANDONED','NATIONAL_DNC_ERROR') then 0 else A.callduration end AS callduration,
+
+      case when A.status in('UNKNOWN_ERROR','QUEUED','MAX_RETRY_LIMIT_REACHED','LOCAL_DNC_ERROR','CALL_TIME_RESTRICTION','CALL_NO_ANSWER','CALL_FAILED',
+                                         'CALL_CANCELED','CALL_BUSY','CALL_ABANDONED','NATIONAL_DNC_ERROR') then 0 else A.voiceduration end AS voiceduration,
+
+      case when A.status not in('UNKNOWN_ERROR','QUEUED','MAX_RETRY_LIMIT_REACHED','LOCAL_DNC_ERROR','CALL_TIME_RESTRICTION','CALL_NO_ANSWER','CALL_FAILED',
+                                 'CALL_CANCELED','CALL_BUSY','CALL_ABANDONED', 'NATIONAL_DNC_ERROR') then A.agentid else 'SYSTEM' end AS agentid,
+
+
+      cast(day(A.updateddate) as float) as transactiondate_day,
+      cast(month(A.updateddate) as float) as transactiondate_month,
+      cast(year(A.updateddate) as float) as transactiondate_year,
+      cast(week(A.updateddate) as float) as transactiondate_week,
+      cast(dayofweek(A.updateddate)-1 as float) as transactiondate_dayofweek,
+      cast(dayofyear(A.updateddate) as float) as transactiondate_dayofyear,
+      cast(hour(A.updateddate) as float) as transactiondate_hour,
+      cast(minute(A.updateddate) as float) as transactiondate_minute,
+      cast(second(A.updateddate) as float) as transactiondate_second
+
+FROM
+( select row_number() over(partition by campaignid,prospectcallid order by updateddate desc) as rownum,
+  --A.*
+
+           campaignid,
+           agentid,
+           prospectcallid,
+           prospectinteractionsessionid,
+            DNI,
+            callstarttime,
+            callstartdate,
+            prospecthandledurationformatted,
+            voicedurationformatted,
+            prospecthandleduration,
+            voiceduration,
+            callduration,
+            status,
+            dispositionstatus, --status,  --: "QA_COMPLETE"}).count()
+            substatus,
+            recordingurl,
+            createddate,
+            updateddate,
+            status_seq,
+            twiliocallsid ,
+            deliveredassetid ,
+            callbackdate,
+            outboundnumber ,
+            latestprospectidentitychangelogid,
+            callretrycount,
+
+           campaign,
+           batch_date ,
+           dnc_note as dnc_note,
+           dnc_trigger as dnc_trigger
+
+  FROM
+(
+SELECT --A.*,
+            A.campaignid as campaignid,
+            A.agentid as agentid,
+            A.prospectcallid as prospectcallid,
+            A.prospectinteractionsessionid as prospectinteractionsessionid ,
+            A.DNI as DNI,
+            A.callstarttime as callstarttime,
+            A.callstartdate as callstartdate,
+            A.prospecthandledurationformatted as prospecthandledurationformatted,
+            A.voicedurationformatted as voicedurationformatted,
+            A.prospecthandleduration as prospecthandleduration,
+            A.voiceduration as voiceduration,
+            A.callduration as callduration,
+            A.status as status,
+            A.dispositionstatus as dispositionstatus,--status,  --: "QA_COMPLETE"}).count()
+            A.substatus as substatus ,
+            A.recordingurl as recordingurl,
+            A.createddate as createddate,
+            A.updateddate as updateddate,
+            A.status_seq as status_seq,
+            A.twiliocallsid as twiliocallsid ,
+            A.deliveredassetid as deliveredassetid ,
+            A.callbackdate as callbackdate,
+            A.outboundnumber as outboundnumber ,
+            A.latestprospectidentitychangelogid as latestprospectidentitychangelogid,
+            A.callretrycount as callretrycount,
+
+       B.name AS campaign,
+       C.batch_date as batch_date ,
+           case when substatus = 'DNCL' then 'DNCL requested by prospect while on the call' else null end as dnc_note,
+           case when substatus = 'DNCL' then 'CALL' else null end as dnc_trigger
+    FROM
+    (
+
+     select
+            campaignid,
+            agentid,
+            prospectcallid,
+            prospectinteractionsessionid ,
+            DNI,
+            callstarttime,
+            callstartdate,
+            prospecthandledurationformatted ,
+            voicedurationformatted,
+            prospecthandleduration,
+            voiceduration,
+            callduration,
+            status,
+            dispositionstatus,  --status, --
+            substatus,
+            recordingurl,
+            createddate,
+            updateddate,
+            status_seq,
+            twiliocallsid,
+            deliveredassetid,
+            callbackdate,
+            outboundnumber,
+            latestprospectidentitychangelogid,
+            callretrycount
+     from
+      (
+     select row_number() over(partition by B.campaignid, B.prospectcallid, B.prospectinteractionsessionid order by B.updateddate desc) as interactionrownum,
+               B.campaignid as campaignid,
+               B.agentid as agentid,
+               B.prospectcallid as prospectcallid,
+               B.prospectinteractionsessionid as prospectinteractionsessionid,
+               B.createddate as createddate,
+               B.updateddate as updateddate,
+               B.prospecthandleduration as prospecthandleduration,
+               B.DNI as DNI,
+               B.callstarttime as callstarttime,
+               B.callstartdate as callstartdate,
+               B.prospecthandledurationformatted as prospecthandledurationformatted,
+               B.voicedurationformatted as voicedurationformatted,
+               B.voiceduration as voiceduration,
+               B.callduration as callduration,
+               B.status as status,
+               B.dispositionstatus as dispositionstatus,
+               B.substatus as substatus,
+               B.recordingurl as recordingurl ,
+               B.status_seq as status_seq,
+               B.twiliocallsid as twiliocallsid,
+               B.deliveredassetid as deliveredassetid,
+               B.callbackdate as callbackdate,
+               B.outboundnumber as outboundnumber,
+               B.latestprospectidentitychangelogid as latestprospectidentitychangelogid,
+               B.callretrycount as callretrycount
+     FROM
+     (
+       SELECT     P.campaignid as campaignid,
+                  P.prospectcallid as prospectcallid,
+                  nvl(P.prospectinteractionsessionid, concat(P.prospectcallid,'-',RPAD(string(P.updatedDate),19,'0'),'-',D.code)) as prospectinteractionsessionid ,
+                  MAX(D.status_seq) status_seq
+          FROM [vantage-167009:Xtaas.PC_PCI] P INNER JOIN [vantage-167009:Xtaas.master_status] D ON P.status = D.code
+          GROUP BY campaignid,prospectcallid,prospectinteractionsessionid
+
+     ) A
+     INNER JOIN
+     (  SELECT P.campaignid as campaignid,
+               P.agentid as agentid,
+               P.prospectcallid as prospectcallid,
+               nvl(P.prospectinteractionsessionid,concat(P.prospectcallid,'-',RPAD(string(P.updatedDate),19,'0'),'-',D.code)) as prospectinteractionsessionid,
+               P.createddate as createddate,
+               P.updateddate as updateddate,
+               P.prospecthandleduration as prospecthandleduration,
+               C.phone AS DNI,
+               P.callstarttime as callstarttime,
+               cast(date(P.callstarttime) as date) AS callstartdate,
+               concat(LPAD((string(integer(P.prospecthandleduration / 60))),2,'0'),':',LPAD(string(P.prospecthandleduration % 60),2,'0')) AS prospecthandledurationformatted,
+               concat(LPAD(string(integer(nvl(P.telcoduration,0) / 60)),2,'0'),':',LPAD(string(nvl (P.telcoduration,0) % 60),2,'0')) AS voicedurationformatted,
+               P.telcoduration AS voiceduration,
+               P.callduration as callduration,
+               P.status as status,
+               P.dispositionstatus as dispositionstatus,
+               P.substatus as substatus,
+               P.recordingurl as recordingurl ,
+               D.status_seq as status_seq,
+               P.twiliocallsid as twiliocallsid,
+               P.deliveredassetid as deliveredassetid,
+               P.callbackdate as callbackdate,
+               P.outboundnumber as outboundnumber,
+               P.latestprospectidentitychangelogid as latestprospectidentitychangelogid,
+               P.callretrycount as callretrycount
+
+         FROM [vantage-167009:Xtaas.PC_PCI] P
+              INNER JOIN [vantage-167009:Xtaas.pci_prospect] C ON P._id = C._id
+              INNER JOIN [vantage-167009:Xtaas.master_status] D ON P.status = D.code
+        WHERE
+              C.isdeleted = false  and C.isdirty = false
+     ) B ON A.campaignid = B.campaignid
+           AND A.prospectcallid = B.prospectcallid
+           AND A.prospectinteractionsessionid = B.prospectinteractionsessionid
+           AND A.status_seq = B.status_seq
+     )
+     where interactionrownum = 1
+
+    )A
+    INNER JOIN
+      [vantage-167009:Xtaas.CMPGN] B ON A.campaignid = B._id
+      INNER JOIN
+    (
+   SELECT B.campaignid as campaignid, B.prospectcallid as prospectcallid, cast(date(A.createddate) as date) AS batch_date
+   FROM [vantage-167009:Xtaas.prospectcalllog] A  INNER JOIN [vantage-167009:Xtaas.prospectcall] B ON A._id = B._id
+   WHERE  A.isdeleted = false and B.isdeleted = false and A.isdirty = false and B.isdirty = false
+   )C ON A.campaignid = C.campaignid AND A.prospectcallid = C.prospectcallid
+   where B.isdeleted = false and B.isdirty = false
+   ) A
+   ,
+   (
+SELECT     1  as rownum,
+           A.campaignid as campaignid,
+           A.createdby as agentid,
+           A.prospectcallid as prospectcallid,
+           cast(null as string) as prospectinteractionsessionid,
+           A.phonenumber as DNI,
+           null as callstarttime,
+           null as callstartdate,
+           cast(null as string) as prospecthandledurationformatted,
+           cast(null as string) as voicedurationformatted,
+           0 as prospecthandleduration,
+           0 as voiceduration,
+           0 as callduration,
+           cast(null as string) as status,
+           cast(null as string) as dispositionstatus,
+           'DNCL' as substatus,
+           A.recordingurl as recordingurl,
+           A.createddate as createddate,
+           A.updateddate as updateddate,
+           cast(null as integer) as status_seq,
+           cast(null as string) as twiliocallsid,
+           cast(null as string) as deliveredassetid,
+           null as callbackdate,
+           cast(null as string) as outboundnumber,
+           null as latestprospectidentitychangelogid,
+           0 as callretrycount,
+           B.name as campaign,
+           null as batch_date,
+           A.note as dnc_note,
+           A.trigger as dnc_trigger
+     from [vantage-167009:Xtaas.dnclist] A
+     INNER JOIN
+     [vantage-167009:Xtaas.CMPGN] B ON A.campaignid = B._id
+     where trigger = 'DIRECT'
+            and A.isdeleted = false and B.isdeleted = false
+            and A.isdirty = false and B.isdirty = false
+)
+) A
+LEFT OUTER JOIN
+(select --A.*,
+        A.qa_seq_num as qa_seq_num,
+        A.campaignName as campaignName,
+    A.AgentName As AgentName,
+    A.QAName as QAName,
+    A._id as _id,
+                A.campaignid as campaignid,
+                A.agentid as agentid,
+                A.qaid as qaid,
+                A.prospectcallid as prospectcallid,
+                A.prospectinteractionsessionid as prospectinteractionsessionid,
+                A.calldate as calldate,
+                A.callstarttime as callstarttime,
+                A.status as status,
+                A.dispositionstatus as dispositionstatus,
+                A.substatus as substatus,
+                A.overallscore as overallscore,
+                A.feedbackdate as feedbackdate,
+                A.feedbacktime as feedbacktime,
+                A.lead_validation_notes as lead_validation_notes,
+                A.PHONEETIQUETTE_CUSTOMER_ENGAGEMENT as PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+                A.PHONEETIQUETTE_PROFESSIONALISM as PHONEETIQUETTE_PROFESSIONALISM,
+                A.SALESMANSHIP_REBUTTAL_USE as SALESMANSHIP_REBUTTAL_USE,
+                A.SALESMANSHIP_PROVIDE_INFORMATION as SALESMANSHIP_PROVIDE_INFORMATION,
+                A.INTRODUCTION_BRANDING_PERSONAL_CORPORATE as INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+                A.INTRODUCTION_MARKETING_EFFORTS as INTRODUCTION_MARKETING_EFFORTS,
+                A.CUSTOMERSATISFACTION_OVERALL_SERVICE as CUSTOMERSATISFACTION_OVERALL_SERVICE,
+                A.CLIENT_FULL_DETAILS as CLIENT_FULL_DETAILS,
+                A.CLIENT_PII as CLIENT_PII,
+                A.CALLCLOSING_BRANDING_PERSONAL_CORPORATE as CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+                A.PHONEETIQUETTE_CALL_PACING as PHONEETIQUETTE_CALL_PACING,
+                A.PHONEETIQUETTE_CALL_HOLD_PURPOSE as PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+                A.SALESMANSHIP_PREQUALIFICATION_QUESTIONS as SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+                A.INTRODUCTION_PREPARE_READY as INTRODUCTION_PREPARE_READY,
+                A.INTRODUCTION_CALL_RECORD as INTRODUCTION_CALL_RECORD,
+                A.CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL as CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+                A.CLIENT_POSTQUALIFICATION_QUESTIONS as CLIENT_POSTQUALIFICATION_QUESTIONS,
+                A.CLIENT_OBTAIN_CUSTOMER_CONSENT as CLIENT_OBTAIN_CUSTOMER_CONSENT,
+                A.CALLCLOSING_EXPECTATION_SETTING as CALLCLOSING_EXPECTATION_SETTING,
+                A.CALLCLOSING_REDIAL_NUMBER as CALLCLOSING_REDIAL_NUMBER,
+                A.LEAD_VALIDATION_VALID as LEAD_VALIDATION_VALID,
+
+              A.clintOfferAndsend as clintOfferAndsend,
+              A.Salesmanship as Salesmanship,
+              A.CallClosing as CallClosing,
+              A.Introduction as Introduction,
+              A.PhoneEtiquette as PhoneEtiquette,
+              A.LeadValidation as LeadValidation
+
+  from
+  (
+    select row_number() over(partition by A.campaignid, A.prospectcallid, A.prospectinteractionsessionid order by A.feedbacktime desc) qa_seq_num,
+    --A.*
+    A.campaignName as campaignName,
+    A.AgentName As AgentName,
+    A.QAName as QAName,
+    A._id as _id,
+                A.campaignid as campaignid,
+                A.agentid as agentid,
+                A.qaid as qaid,
+                A.prospectcallid as prospectcallid,
+                A.prospectinteractionsessionid as prospectinteractionsessionid,
+                A.calldate as calldate,
+                A.callstarttime as callstarttime,
+                A.status as status,
+                A.dispositionstatus as dispositionstatus,
+                A.substatus as substatus,
+                A.overallscore as overallscore,
+                A.feedbackdate as feedbackdate,
+                A.feedbacktime as feedbacktime,
+                A.lead_validation_notes as lead_validation_notes,
+                A.PHONEETIQUETTE_CUSTOMER_ENGAGEMENT as PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+                A.PHONEETIQUETTE_PROFESSIONALISM as PHONEETIQUETTE_PROFESSIONALISM,
+                A.SALESMANSHIP_REBUTTAL_USE as SALESMANSHIP_REBUTTAL_USE,
+                A.SALESMANSHIP_PROVIDE_INFORMATION as SALESMANSHIP_PROVIDE_INFORMATION,
+                A.INTRODUCTION_BRANDING_PERSONAL_CORPORATE as INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+                A.INTRODUCTION_MARKETING_EFFORTS as INTRODUCTION_MARKETING_EFFORTS,
+                A.CUSTOMERSATISFACTION_OVERALL_SERVICE as CUSTOMERSATISFACTION_OVERALL_SERVICE,
+                A.CLIENT_FULL_DETAILS as CLIENT_FULL_DETAILS,
+                A.CLIENT_PII as CLIENT_PII,
+                A.CALLCLOSING_BRANDING_PERSONAL_CORPORATE as CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+                A.PHONEETIQUETTE_CALL_PACING as PHONEETIQUETTE_CALL_PACING,
+                A.PHONEETIQUETTE_CALL_HOLD_PURPOSE as PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+                A.SALESMANSHIP_PREQUALIFICATION_QUESTIONS as SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+                A.INTRODUCTION_PREPARE_READY as INTRODUCTION_PREPARE_READY,
+                A.INTRODUCTION_CALL_RECORD as INTRODUCTION_CALL_RECORD,
+                A.CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL as CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+                A.CLIENT_POSTQUALIFICATION_QUESTIONS as CLIENT_POSTQUALIFICATION_QUESTIONS,
+                A.CLIENT_OBTAIN_CUSTOMER_CONSENT as CLIENT_OBTAIN_CUSTOMER_CONSENT,
+                A.CALLCLOSING_EXPECTATION_SETTING as CALLCLOSING_EXPECTATION_SETTING,
+                A.CALLCLOSING_REDIAL_NUMBER as CALLCLOSING_REDIAL_NUMBER,
+                A.LEAD_VALIDATION_VALID as LEAD_VALIDATION_VALID,
+
+              A.clintOfferAndsend as clintOfferAndsend,
+              A.Salesmanship as Salesmanship,
+              A.CallClosing as CallClosing,
+              A.Introduction as Introduction,
+              A.PhoneEtiquette as PhoneEtiquette,
+              A.LeadValidation as LeadValidation
+
+
+
+    from
+      (
+        SELECT C.NAME AS CampaignName,
+              concat(D.firstname,' ',D.lastname) AS AgentName,
+              concat(E.firstname,' ',E.lastname) AS QAName,
+              --A.*,
+              A._id as _id,
+                A.campaignid as campaignid,
+                A.agentid as agentid,
+                A.qaid as qaid,
+                A.prospectcallid as prospectcallid,
+                A.prospectinteractionsessionid as prospectinteractionsessionid,
+                A.calldate as calldate,
+                A.callstarttime as callstarttime,
+                A.status as status,
+                A.dispositionstatus as dispositionstatus,
+                A.substatus as substatus,
+                A.overallscore as overallscore,
+                A.feedbackdate as feedbackdate,
+                A.feedbacktime as feedbacktime,
+                A.lead_validation_notes as lead_validation_notes,
+                A.PHONEETIQUETTE_CUSTOMER_ENGAGEMENT as PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+                A.PHONEETIQUETTE_PROFESSIONALISM as PHONEETIQUETTE_PROFESSIONALISM,
+                A.SALESMANSHIP_REBUTTAL_USE as SALESMANSHIP_REBUTTAL_USE,
+                A.SALESMANSHIP_PROVIDE_INFORMATION as SALESMANSHIP_PROVIDE_INFORMATION,
+                A.INTRODUCTION_BRANDING_PERSONAL_CORPORATE as INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+                A.INTRODUCTION_MARKETING_EFFORTS as INTRODUCTION_MARKETING_EFFORTS,
+                A.CUSTOMERSATISFACTION_OVERALL_SERVICE as CUSTOMERSATISFACTION_OVERALL_SERVICE,
+                A.CLIENT_FULL_DETAILS as CLIENT_FULL_DETAILS,
+                A.CLIENT_PII as CLIENT_PII,
+                A.CALLCLOSING_BRANDING_PERSONAL_CORPORATE as CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+                A.PHONEETIQUETTE_CALL_PACING as PHONEETIQUETTE_CALL_PACING,
+                A.PHONEETIQUETTE_CALL_HOLD_PURPOSE as PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+                A.SALESMANSHIP_PREQUALIFICATION_QUESTIONS as SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+                A.INTRODUCTION_PREPARE_READY as INTRODUCTION_PREPARE_READY,
+                A.INTRODUCTION_CALL_RECORD as INTRODUCTION_CALL_RECORD,
+                A.CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL as CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+                A.CLIENT_POSTQUALIFICATION_QUESTIONS as CLIENT_POSTQUALIFICATION_QUESTIONS,
+                A.CLIENT_OBTAIN_CUSTOMER_CONSENT as CLIENT_OBTAIN_CUSTOMER_CONSENT,
+                A.CALLCLOSING_EXPECTATION_SETTING as CALLCLOSING_EXPECTATION_SETTING,
+                A.CALLCLOSING_REDIAL_NUMBER as CALLCLOSING_REDIAL_NUMBER,
+                A.LEAD_VALIDATION_VALID as LEAD_VALIDATION_VALID,
+              B.ClientOfferAndSend as clintOfferAndsend,
+              B.Salesmanship as Salesmanship,
+              B.CallClosing as CallClosing,
+              B.Introduction as Introduction,
+              B.PhoneEtiquette as PhoneEtiquette,
+              B.LeadValidation as LeadValidation
+        FROM
+        (
+               SELECT _id,
+                campaignid,
+                agentid,
+                qaid,
+                prospectcallid,
+                prospectinteractionsessionid,
+                cast(date(callstarttime) as date) AS calldate,
+                callstarttime,
+                MAX(STATUS) status,
+                dispositionstatus,
+                substatus,
+                overallscore,
+                cast(date(feedbacktime) as date) As feedbackdate,
+                feedbacktime,
+                MAX(lead_validation_notes) AS lead_validation_notes,
+                MAX(PHONEETIQUETTE_CUSTOMER_ENGAGEMENT) AS PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+                MAX(PHONEETIQUETTE_PROFESSIONALISM) AS PHONEETIQUETTE_PROFESSIONALISM,
+                MAX(SALESMANSHIP_REBUTTAL_USE) AS SALESMANSHIP_REBUTTAL_USE,
+                MAX(SALESMANSHIP_PROVIDE_INFORMATION) AS SALESMANSHIP_PROVIDE_INFORMATION,
+                MAX(INTRODUCTION_BRANDING_PERSONAL_CORPORATE) AS INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+                MAX(INTRODUCTION_MARKETING_EFFORTS) AS INTRODUCTION_MARKETING_EFFORTS,
+                MAX(CUSTOMERSATISFACTION_OVERALL_SERVICE) AS CUSTOMERSATISFACTION_OVERALL_SERVICE,
+                MAX(CLIENT_FULL_DETAILS) AS CLIENT_FULL_DETAILS,
+                MAX(CLIENT_PII) AS CLIENT_PII,
+                MAX(CALLCLOSING_BRANDING_PERSONAL_CORPORATE) AS CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+                MAX(PHONEETIQUETTE_CALL_PACING) AS PHONEETIQUETTE_CALL_PACING,
+                MAX(PHONEETIQUETTE_CALL_HOLD_PURPOSE) AS PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+                MAX(SALESMANSHIP_PREQUALIFICATION_QUESTIONS) AS SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+                MAX(INTRODUCTION_PREPARE_READY) AS INTRODUCTION_PREPARE_READY,
+                MAX(INTRODUCTION_CALL_RECORD) AS INTRODUCTION_CALL_RECORD,
+                MAX(CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL) AS CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+                MAX(CLIENT_POSTQUALIFICATION_QUESTIONS) AS CLIENT_POSTQUALIFICATION_QUESTIONS,
+                MAX(CLIENT_OBTAIN_CUSTOMER_CONSENT) AS CLIENT_OBTAIN_CUSTOMER_CONSENT,
+                MAX(CALLCLOSING_EXPECTATION_SETTING) AS CALLCLOSING_EXPECTATION_SETTING,
+                MAX(CALLCLOSING_REDIAL_NUMBER) AS CALLCLOSING_REDIAL_NUMBER,
+                MAX(LEAD_VALIDATION_VALID) AS LEAD_VALIDATION_VALID
+        FROM
+                (
+                SELECT _id,
+                  campaignid,
+                  agentid,
+                  prospectcallid,
+                  prospectinteractionsessionid,
+                  callstarttime,
+                  STATUS,
+                  dispositionstatus,
+                  substatus,
+                  qaid,
+                  overallscore,
+                  feedbacktime,
+                  sectionname,
+                  CASE WHEN attribute = 'PHONEETIQUETTE_CUSTOMER_ENGAGEMENT' THEN feedback END AS  PHONEETIQUETTE_CUSTOMER_ENGAGEMENT,
+                  CASE WHEN attribute = 'PHONEETIQUETTE_PROFESSIONALISM' THEN feedback END AS  PHONEETIQUETTE_PROFESSIONALISM,
+                  CASE WHEN attribute = 'SALESMANSHIP_REBUTTAL_USE' THEN feedback END AS  SALESMANSHIP_REBUTTAL_USE,
+                  CASE WHEN attribute = 'SALESMANSHIP_PROVIDE_INFORMATION' THEN feedback END AS  SALESMANSHIP_PROVIDE_INFORMATION,
+                  CASE WHEN attribute = 'INTRODUCTION_BRANDING_PERSONAL_CORPORATE' THEN feedback END AS  INTRODUCTION_BRANDING_PERSONAL_CORPORATE,
+                  CASE WHEN attribute = 'INTRODUCTION_MARKETING_EFFORTS' THEN feedback END AS  INTRODUCTION_MARKETING_EFFORTS,
+                  CASE WHEN attribute = 'CUSTOMERSATISFACTION_OVERALL_SERVICE' THEN feedback END AS  CUSTOMERSATISFACTION_OVERALL_SERVICE,
+                  CASE WHEN attribute = 'CLIENT_FULL_DETAILS' THEN feedback END AS  CLIENT_FULL_DETAILS,
+                  CASE WHEN attribute = 'CLIENT_PII' THEN feedback END AS  CLIENT_PII,
+                  CASE WHEN attribute = 'CALLCLOSING_BRANDING_PERSONAL_CORPORATE' THEN feedback END AS  CALLCLOSING_BRANDING_PERSONAL_CORPORATE,
+                  CASE WHEN attribute = 'PHONEETIQUETTE_CALL_PACING' THEN feedback END AS  PHONEETIQUETTE_CALL_PACING,
+                  CASE WHEN attribute = 'PHONEETIQUETTE_CALL_HOLD_PURPOSE' THEN feedback END AS  PHONEETIQUETTE_CALL_HOLD_PURPOSE,
+                  CASE WHEN attribute = 'SALESMANSHIP_PRE-QUALIFICATION_QUESTIONS' THEN feedback END AS  SALESMANSHIP_PREQUALIFICATION_QUESTIONS,
+                  CASE WHEN attribute = 'INTRODUCTION_PREPARE_READY' THEN feedback END AS INTRODUCTION_PREPARE_READY,
+                  CASE WHEN attribute = 'INTRODUCTION_CALL_RECORD' THEN feedback END AS INTRODUCTION_CALL_RECORD,
+                  CASE WHEN attribute = 'CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL' THEN feedback END AS CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL,
+                  CASE WHEN attribute = 'CLIENT_POST-QUALIFICATION QUESTIONS' THEN feedback END AS CLIENT_POSTQUALIFICATION_QUESTIONS,
+                  CASE WHEN attribute = 'CLIENT_OBTAIN_CUSTOMER_CONSENT' THEN feedback END AS CLIENT_OBTAIN_CUSTOMER_CONSENT,
+                  CASE WHEN attribute = 'CALLCLOSING_EXPECTATION_SETTING' THEN feedback END AS CALLCLOSING_EXPECTATION_SETTING,
+                  CASE WHEN attribute = 'CALLCLOSING_REDIAL_NUMBER' THEN feedback END AS CALLCLOSING_REDIAL_NUMBER,
+                  CASE WHEN attribute = 'LEAD_VALIDATION_VALID' THEN feedback END AS LEAD_VALIDATION_VALID,
+                  CASE WHEN attribute = 'LEAD_VALIDATION_VALID' THEN attributecomment else null END AS LEAD_VALIDATION_NOTES
+                        FROM
+                        (
+                       SELECT A._id as _id,
+                    P.campaignid as campaignid,
+                    P.agentid as agentid,
+                    P.prospectcallid as prospectcallid,
+                    P.prospectinteractionsessionid as prospectinteractionsessionid,
+                    P.callstarttime as callstarttime,
+                    P.STATUS as status,
+                    P.dispositionstatus as dispositionstatus,
+                    P.substatus as substatus,
+                    F.qaid as qaid,
+                    cast(F.overallscore as float) as overallscore,
+                    F.qacomments as qacomments,
+                    F.feedbacktime as feedbacktime,
+                    A.sectionname as sectionname,
+                    E.attribute as attribute,
+                    B.attributecomment as attributecomment,
+                    E.label as label,
+                    B.feedback as feedback
+                    FROM [vantage-167009:Xtaas.pci_feedbackResponseList] A
+                 INNER JOIN [vantage-167009:Xtaas.pci_responseAttributes] B ON A._id = B._id AND A.INDEX = B.index
+                 INNER JOIN [vantage-167009:Xtaas.PC_PCI] P ON B._id = P._id
+                 INNER JOIN [vantage-167009:Xtaas.qafeedbackformattributes] E ON B.attribute = E.attribute
+                 INNER JOIN [vantage-167009:Xtaas.pci_qafeedback] F ON A._id = F._id
+                 INNER JOIN [vantage-167009:Xtaas.CMPGN] G on P.campaignid = G._id
+                                WHERE F.qaid IS NOT NULL
+                 AND   A.isdeleted = false AND A.isdirty = false
+                 AND   B.isdeleted = false AND B.isdirty = false
+                 AND   E.isdeleted = false AND E.isdirty = false
+                 AND   F.isdeleted = false AND F.isdirty = false
+                 AND   G.isdeleted = false AND G.isdirty = false
+                        )
+
+                        )
+
+        GROUP BY _id, campaignid, agentid, prospectcallid, prospectinteractionsessionid,callstarttime ,calldate,dispositionstatus,substatus,qaid,overallscore,feedbacktime,feedbackdate
+
+        ) A
+        INNER JOIN
+        (
+           SELECT _id,
+              campaignid,
+              agentid,
+              MAX(ClientOfferAndSend) ClientOfferAndSend,
+              MAX(Salesmanship) Salesmanship,
+              MAX(CallClosing) CallClosing,
+              MAX(Introduction) Introduction,
+              MAX(PhoneEtiquette) PhoneEtiquette,
+              MAX(LeadValidation) LeadValidation
+                FROM
+                (
+
+         SELECT _id,
+                campaignid,
+                agentid,
+                CASE WHEN sectionname = 'Client Offer & Send' THEN avg_percent ELSE 0 END AS ClientOfferAndSend,
+                CASE WHEN sectionname = 'Salesmanship' THEN avg_percent ELSE 0 END AS Salesmanship,
+                CASE WHEN sectionname = 'Call Closing' THEN avg_percent ELSE 0 END AS CallClosing,
+                CASE WHEN sectionname = 'Introduction' THEN avg_percent ELSE 0 END AS Introduction,
+                CASE WHEN sectionname = 'Phone Etiquette' THEN avg_percent ELSE 0 END AS PhoneEtiquette,
+                CASE WHEN sectionname = 'Lead Validation' THEN avg_percent ELSE 0 END AS LeadValidation
+                        FROM
+                        (
+                                 SELECT _id,
+                                        campaignid,
+                                        agentid,
+                                        sectionname,
+                                        CASE WHEN (total - nac) < 1 THEN 1.00 ELSE yesc*1.00 /(total - nac) END AS avg_percent
+                                FROM
+                                (SELECT _id,
+                                                A.campaignid as campaignid,
+                                                A.agentid as agentid,
+                                                A.sectionname as sectionname,
+                                                yesc,
+                                                noc,
+                                                nac,
+                                                (yesc + noc + nac) AS total
+                                        FROM
+                                        (
+
+                                          SELECT        _id,
+                                                        campaignid,
+                                                        agentid,
+                                                        sectionname,
+                                                        SUM(yes_count) yesc,
+                                                        SUM(no_count) noc,
+                                                        SUM(na_count) nac
+                                                FROM
+                                                (
+                                                        SELECT _id,
+                                                                campaignid,
+                                                                agentid,
+                                                                sectionname,
+                                                                CASE WHEN feedback='YES' THEN count ELSE 0 END AS yes_count,
+                                                                CASE WHEN feedback='NO' THEN count ELSE 0 END AS no_count,
+                                                                CASE WHEN feedback='NA' THEN count ELSE 0 END AS na_count
+                                                        FROM
+                                                        (SELECT A._id as _id,
+                                                                        C.campaignid as campaignid,
+                                                                        C.agentid as agentid,
+                                                                        A.sectionname as sectionname,
+                                                                        B.feedback as feedback,
+                                                                        cast(COUNT(B.feedback) as integer) AS COUNT
+                                                                FROM [vantage-167009:Xtaas.pci_feedbackResponseList] A
+                                                                        INNER JOIN [vantage-167009:Xtaas.pci_responseAttributes] B ON A._id = B._id AND A.INDEX = B.index
+                                                                        INNER JOIN [vantage-167009:Xtaas.pci_prospectcall] C ON B._id=C._id
+                                                                        INNER JOIN [vantage-167009:Xtaas.CMPGN] D on C.campaignid = D._id
+                                                                WHERE sectionname NOT LIKE 'Customer Satisfaction'
+                          AND   A.isdeleted = false AND A.isdirty = false
+                          AND   B.isdeleted = false AND B.isdirty = false
+                          AND   C.isdeleted = false AND C.isdirty = false
+                          AND   D.isdeleted = false AND D.isdirty = false
+                    GROUP BY _id,
+                          campaignid,
+                          agentid,
+                          sectionname,
+                          feedback
+                    ORDER BY _id,
+                          campaignid,
+                          agentid,
+                          sectionname
+                                                        )
+                                                )
+                GROUP BY _id, campaignid, agentid, sectionname
+                                                ORDER BY _id, campaignid, agentid, sectionname
+                                        ) A
+                                        ORDER BY _id, campaignid, agentid, sectionname
+                                )
+                        )
+                )
+                GROUP BY _id, campaignid, agentid
+       ) B ON A._id = B._id
+        INNER JOIN [vantage-167009:Xtaas.CMPGN] C ON C._id = A.campaignid
+        INNER JOIN [vantage-167009:Xtaas.agent] D ON D._id = A.agentid
+        INNER JOIN [vantage-167009:Xtaas.qa] E ON E._id = A.qaid
+        WHERE C.isdeleted = FALSE AND C.isdirty = false
+                AND   D.isdeleted = FALSE AND D.isdirty = false
+                AND   E.isdeleted = FALSE AND E.isdirty = false
+
+    ) A
+
+  ) A
+  where qa_seq_num = 1
+
+
+) C ON A.campaignid = C.campaignid AND A.prospectcallid = C.prospectcallid
+        AND A.prospectinteractionsessionid = C.prospectinteractionsessionid
+
+LEFT OUTER JOIN
+(
+        SELECT campaignid,
+                prospectcallid,
+                prospectinteractionsessionid,
+                dni,
+                callstarttime,
+                callstartdate,
+                status,
+                dispositionstatus,
+                    Industrylist,
+                MAX(ltrim(rtrim(Revenue,'"'),'"')) Revenue,
+                MAX(ltrim(rtrim(EventTimeline,'"'),'"')) EventTimeline,
+                MAX(ltrim(rtrim(Industry,'"'),'"')) Industry,
+                MAX(ltrim(rtrim(Budget,'"'),'"')) Budget,
+                MAX(ltrim(rtrim(CurrentlyEvaluatingCallAnalytics,'"'),'"')) CurrentlyEvaluatingCallAnalytics,
+                MAX(ltrim(rtrim(Department,'"'),'"')) Department,
+                MAX(ltrim(rtrim(Title,'"'),'"')) Title,
+                MAX(ltrim(rtrim(NumberOfEmployees,'"'),'"')) NumberOfEmployees,
+                MAX(ltrim(rtrim(Country,'"'),'"')) Country
+        FROM
+        (SELECT B.campaignid as campaignid,
+                        B.prospectcallid as prospectcallid,
+                        B.prospectinteractionsessionid as prospectinteractionsessionid,
+                        C.phone AS DNI,
+                        B.callstarttime as callstarttime,
+                        cast(date(B.callstarttime) as date) AS callstartdate,
+                        A.status as status,
+                        B.dispositionstatus as dispositionstatus,
+                              C.Industrylist as industrylist,
+                        CASE WHEN D.answerskey IN ('"AnnualRevenue"','"What is the Annual Revenue of your Company?"','AnnualRevenue') THEN D.answersvalue END AS Revenue,
+                        CASE WHEN D.answerskey IN ('"EventTimeline"','"What is your timeline?"','"When is your event?"','EventTimeline') THEN D.answersvalue END AS EventTimeline,
+                        CASE WHEN D.answerskey IN ('"Industry"','"Which Industry you belong to?"','Which_Industry_you_belong_to_','Industry') THEN D.answersvalue END AS Industry,
+                        CASE WHEN D.answerskey IN ('"Budget"','"What is your budget?"','Budget') THEN D.answersvalue END AS Budget,
+                        CASE WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'CurrentlyEvaluatingCallAnalytics' THEN D.answersvalue END AS CurrentlyEvaluatingCallAnalytics,
+                        CASE WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'Department' THEN D.answersvalue
+                             WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'MarketingDeptYesNo' and lower(ltrim(rtrim(D.answersvalue,'"'),'"')) = 'yes' THEN 'Marketing'
+                             WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'MarketingDeptYesNo' and lower(ltrim(rtrim(D.answersvalue,'"'),'"')) = 'no' THEN 'Other'
+                             END AS Department,
+                        CASE WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'Title' THEN D.answersvalue END AS Title,
+                        CASE WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'NumberOfEmployeesLessThan50' and lower(ltrim(rtrim(D.answersvalue,'"'),'"')) = 'yes' THEN 'Less than 50'
+                             WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'NumberOfEmployeesLessThan50' and lower(ltrim(rtrim(D.answersvalue,'"'),'"')) = 'no' THEN 'More than 50'
+                             WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'NumberOfEmployees' THEN D.answersvalue END AS NumberOfEmployees,
+                        CASE WHEN ltrim(rtrim(D.answerskey,'"'),'"') = 'IsCountryUS' THEN 'USA' ELSE 'Other' END AS Country
+                FROM [vantage-167009:Xtaas.prospectcalllog] A
+                        INNER JOIN [vantage-167009:Xtaas.prospectcall] B ON A._id = B._id
+                        INNER JOIN [vantage-167009:Xtaas.prospect] C ON B._id = C._id
+                        INNER JOIN [vantage-167009:Xtaas.answers] D ON C._id = D._id
+                        INNER JOIN [vantage-167009:Xtaas.CMPGN] E on B.campaignid = E._id
+                WHERE
+                      A.isdeleted = FALSE AND A.isdirty = false
+                AND   B.isdeleted = FALSE AND B.isdirty = false
+                AND   C.isdeleted = FALSE AND C.isdirty = false
+                AND   D.isdeleted = FALSE AND D.isdirty = false
+                AND   E.isdeleted = FALSE AND E.isdirty = false
+        )
+        GROUP BY campaignid,prospectcallid,prospectinteractionsessionid,dni,callstarttime,callstartdate,status,Industrylist,dispositionstatus
+) D ON A.campaignid = D.campaignid AND A.prospectcallid = D.prospectcallid
+        AND A.prospectinteractionsessionid = D.prospectinteractionsessionid AND A.dispositionstatus = D.dispositionstatus
+
+
+LEFT OUTER JOIN
+  [vantage-167009:Xtaas.master_status] E on A.status = E.code
+LEFT OUTER JOIN
+  [vantage-167009:Xtaas.master_dispositionstatus] F on A.dispositionstatus = F.code
+LEFT OUTER JOIN
+  [vantage-167009:Xtaas.master_substatus] G on A.substatus = G.code
+)
