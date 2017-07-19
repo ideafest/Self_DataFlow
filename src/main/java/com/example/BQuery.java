@@ -13,20 +13,15 @@ import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BQuery {
 	
-	private static final String query = "SELECT\n" +
-			"  word,\n" +
-			"  COUNT(word) as wordCount\n" +
-			"FROM\n" +
-			"  [zimetrics:Learning.shakespeare_copy]\n" +
-			"GROUP BY\n" +
-			"  word\n" +
-			"LIMIT\n" +
-			"  1000";
+	
 	private static final String sourceTable = "zimetrics:Learning.shakespeare_copy";
 
 	private static class ExtractWords extends DoFn<TableRow, String>{
@@ -64,10 +59,20 @@ public class BQuery {
 		}
 	}
 	
-	
-	public static void main(String[] args) {
+	private static interface Options extends PipelineOptions {
+		@Description("Input path to file containing query")
+		String getInputPath();
+		void setInputPath(String inputPath);
 		
-		DataflowPipelineOptions pipelineOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(DataflowPipelineOptions.class);
+		@Description("Output Path")
+		@Validation.Required
+		String getOutput();
+		void setOutput(String output);
+	}
+	
+	public static void main(String[] args) throws IOException {
+		
+		Options pipelineOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		
 		Pipeline pipeline = Pipeline.create(pipelineOptions);
 		
@@ -76,9 +81,9 @@ public class BQuery {
 		schemaList.add(new TableFieldSchema().setName("wordCount").setType("INTEGER"));
 		TableSchema schema = new TableSchema().setFields(schemaList);
 		
-		pipeline.apply(BigQueryIO.Read.fromQuery(query))
+		pipeline.apply(BigQueryIO.Read.fromQuery(readFile(pipelineOptions.getInputPath())))
 				.apply(ParDo.of(new ExtractAndSend()))
-				.apply(BigQueryIO.Write.to("zimetrics:Learning.word_count")
+				.apply(BigQueryIO.Write.to(pipelineOptions.getOutput())
 				.withSchema(schema)
 				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
 				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
@@ -87,4 +92,22 @@ public class BQuery {
 		
 	}
 	
+	
+	
+	public static String readFile(String filePath) throws IOException {
+		BufferedReader br = new BufferedReader(new FileReader(filePath));
+		try {
+			StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+			
+			while (line != null) {
+				sb.append(line);
+				sb.append("\n");
+				line = br.readLine();
+			}
+			return sb.toString();
+		} finally {
+			br.close();
+		}
+	}
 }

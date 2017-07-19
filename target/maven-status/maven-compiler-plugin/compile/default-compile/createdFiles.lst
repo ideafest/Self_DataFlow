@@ -6,6 +6,7 @@ com/example/SideViewTrial.class
 com/example/ExportFromBQuery.class
 com/example/LocalMinimalWordCount.class
 com/example/BQJoin$ExtractFromSource_1.class
+com/example/BQuery_v2$ExtractAndSend.class
 com/example/SideViewTrial$Options.class
 com/example/common/PubsubFileInjector.class
 com/example/BQJoin$2.class
@@ -15,9 +16,11 @@ com/example/WordCount$CountWords.class
 com/example/BelowTheMean.class
 com/example/BigQueryRandom$ExtractTornado.class
 com/example/BigQueryRandom$CountTornadoes.class
+com/example/BQuery_v2.class
 com/example/SideViewTrial$PerformProcessing$1.class
 com/example/BQJoin_2$1.class
 com/example/SideViewTrial$PerformProcessing.class
+com/example/BQuery$ExtractWords.class
 com/example/WindowedWordCount$AddTimestampFn.class
 com/example/MinimalWordCount$1.class
 com/example/common/DataflowExampleUtils.class
@@ -29,6 +32,7 @@ com/example/BQJoin.class
 com/example/WindowedWordCount.class
 com/example/WordCount$WordCountOptions.class
 com/example/BQThings_v2.class
+com/example/BQuery$ExtractAndSend.class
 com/example/WindowedWordCount$FormatAsTableRowFn.class
 com/example/ExportFromBQuery$ExtractData.class
 com/example/BQThings_v2$BQOptions.class
@@ -56,6 +60,7 @@ com/example/common/ExampleBigQueryTableOptions.class
 com/example/WordCount$FormatAsTextFn.class
 com/example/DebuggingWordCount$WordCountOptions.class
 com/example/WindowedWordCount$Options.class
+com/example/BQuery_v2$1.class
 com/example/SideViewTrial$ExtractWords.class
 com/example/common/DataflowExampleUtils$1.class
 com/example/ExportFromBQ.class
@@ -71,12 +76,12 @@ com/example/BQJoin_2$ExtractFromTable2.class
 com/example/WordCountTemplate$ExtractWordsFn.class
 com/example/common/PubsubFileInjector$Unbound.class
 com/example/BQuery.class
-com/example/BQuery$ExctractWords.class
 com/example/ExportAsCSV.class
 com/example/common/DataflowExampleOptions.class
 com/example/BQuery$doThatOperation.class
 com/example/MinimalWordCount.class
 com/example/BigQueryTornadoes$Options.class
+com/example/BQuery_v2$Options.class
 com/example/WordCountTemplate$CountWords.class
 com/example/BigQueryRandom$TableOptions.class
 com/example/ExportFromBQuery$BQOptions.class
