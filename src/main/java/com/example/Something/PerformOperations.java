@@ -48,4 +48,18 @@ public class PerformOperations extends DoFn<TableRow, String> {
 				}));
 		return result;
 	}
+	
+	public static PCollection<SchemaDetails> translateToSchema(PCollection<TableRow> rowPCollection){
+		return rowPCollection.apply(ParDo.named("Extracting required schema fields")
+		.of(new DoFn<TableRow, SchemaDetails>() {
+			@Override
+			public void processElement(ProcessContext context) throws Exception {
+				TableRow row = context.element();
+				SchemaDetails schemaDetails = new SchemaDetails();
+				schemaDetails.setOutputFieldName((String) row.get("input_field_name"));
+				schemaDetails.setOtputFieldDataType((String) row.get("datatype"));
+				context.output(schemaDetails);
+			}
+		}));
+	}
 }
