@@ -4,10 +4,7 @@ import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
+import com.google.cloud.dataflow.sdk.options.*;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 
@@ -31,6 +28,11 @@ public class ExportFromBQ {
 		@Default.String(source)
 		String getInput();
 		void setInput(String value);
+		
+		@Description("Output")
+		@Validation.Required
+		String getOutput();
+		void setOutput(String output);
 	}
 	
 	public static void main(String[] args) {
@@ -39,7 +41,7 @@ public class ExportFromBQ {
 		
 		pipeline.apply(BigQueryIO.Read.named("Reader").from(options.getInput()))
 				.apply(ParDo.of(new ExtractData()))
-				.apply(TextIO.Write.named("Writing").to("/home/zimetrics/Documents/exported.txt"));
+				.apply(TextIO.Write.named("Writing").to(options.getOutput()));
 		
 		pipeline.run();
 	}

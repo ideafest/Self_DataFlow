@@ -1,3 +1,4 @@
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/GottaTestThis.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQThings_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryRandom.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/MinimalWordCount.java
@@ -13,8 +14,10 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQThings.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideViewTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQuery.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/FieldArrayList.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQuery_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/DataflowExampleUtils.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/SchemaDetails.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQJoin_2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromTable.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/LocalWordCount.java
@@ -23,6 +26,7 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/JSAPTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/DebuggingWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/CreateSchema.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WindowedWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/DataflowExampleOptions.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BelowTheMean.java
