@@ -42,16 +42,16 @@ public class GottaTestThis {
 	}
 	
 	private interface Options extends PipelineOptions{
-		@Description("Main table input")
-		@Default.String(mainTable);
-		String getInput();
-		void setInput(String input);
-		
-		@Description("Side Table Input")
-		@Default.String(sideInputTable);
-		String getSideInput();
-		void setSideInput(String sideInput);
-		
+//		@Description("Main table input")
+//		@Default.String(mainTable);
+//		String getInput();
+//		void setInput(String input);
+//
+//		@Description("Side Table Input")
+//		@Default.String(sideInputTable);
+//		String getSideInput();
+//		void setSideInput(String sideInput);
+//
 		@Description("Output destination")
 		@Validation.Required
 		String getOutput();

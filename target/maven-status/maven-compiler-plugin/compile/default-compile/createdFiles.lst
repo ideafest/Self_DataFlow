@@ -1,4 +1,11 @@
 com/example/BQThings$GetThemFiltered.class
+com/example/Something/PerformOperations$1.class
+com/example/Something/GottaTestThis$ExtractDataFromMainTable.class
 com/example/BQThings$ExtractFromThatTable.class
+com/example/Something/GottaTestThis.class
+com/example/Something/PerformOperations$2.class
 com/example/BQThings$Options.class
+com/example/Something/GottaTestThis$ExtractDataFromSideInputTable.class
 com/example/BQThings$1.class
+com/example/Something/GottaTestThis$Options.class
+com/example/Something/PerformOperations.class

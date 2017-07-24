@@ -28,6 +28,7 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/CreateSchema.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WindowedWordCount.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/PerformOperations.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/DataflowExampleOptions.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BelowTheMean.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQJoin.java

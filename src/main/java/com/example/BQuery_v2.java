@@ -56,7 +56,7 @@ public class BQuery_v2 {
 	public static void main(String[] args) throws IOException {
 		
 		Options pipelineOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		pipelineOptions.setTempLocation("gs://learning001/temp");
+		pipelineOptions.setTempLocation("gs://practice001/temp");
 		
 		Pipeline pipeline = Pipeline.create(pipelineOptions);
 		
@@ -93,7 +93,7 @@ public class BQuery_v2 {
 		fieldSchemaList.add(new TableFieldSchema().setName("callstarttime").setType("TIMESTAMP"));
 		fieldSchemaList.add(new TableFieldSchema().setName("qaid").setType("STRING"));
 		fieldSchemaList.add(new TableFieldSchema().setName("overallscore").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("qastatus").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("qastatus").setType("STRING"));
 		fieldSchemaList.add(new TableFieldSchema().setName("feedbackdate").setType("DATE"));
 		fieldSchemaList.add(new TableFieldSchema().setName("feedbacktime").setType("TIMESTAMP"));
 		fieldSchemaList.add(new TableFieldSchema().setName("clintOfferAndsend").setType("FLOAT"));
