@@ -52,13 +52,13 @@ public class BQThings {
 	public static List<Field> getThemFields(){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable("Learning","weather_filter");
+		Table table = bigQuerySnippets.getTable("Learning","shakespeare_copy");
 		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
 		
 		return fieldSchemas;
 	}
 	
-	private static interface Options extends PipelineOptions{
+	private interface Options extends PipelineOptions{
 		@Description("Input table Path")
 		@Default.String("zimetrics:Learning.weather_stations_copy")
 		String getInput();
