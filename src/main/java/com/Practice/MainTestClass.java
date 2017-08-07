@@ -28,15 +28,15 @@ import java.util.List;
 
 public class MainTestClass {
 	
-	private static final String table1Name = "vantage-167009:Xtaas.PC_PCI";
-	private static final String table2Name = "vantage-167009:Xtaas.master_status";
+	private static final String table1Name = "vantage-167009:Learning.Check1";
+	private static final String table2Name = "vantage-167009:Learning.Query_Output";
 	
 	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("status");
+			String id = (String) row.get("campaignid");
 			context.output(KV.of(id, row));
 		}
 	}
@@ -46,7 +46,7 @@ public class MainTestClass {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("code");
+			String id = (String) row.get("campaignid");
 			context.output(KV.of(id, row));
 		}
 	}
@@ -84,23 +84,29 @@ public class MainTestClass {
 				.and(tupleTag2, kvpCollection2)
 				.apply(CoGroupByKey.create());
 		
-		PCollection<TableRow> resultPCOllection = kvpCollection
+		PCollection<TableRow> resultPCollection = kvpCollection
 				.apply(ParDo.of(new DoFn<KV<String, CoGbkResult>, TableRow>(){
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> coGbkResultKV = context.element();
-						TableRow row1 = coGbkResultKV.getValue().getOnly(tupleTag1);
-						TableRow row2 = coGbkResultKV.getValue().getOnly(tupleTag2);
 						TableRow row = new TableRow();
+						for(TableRow row1 : coGbkResultKV.getValue().getAll(tupleTag1)){
+							setTheTableRow(row, row1, "Learning","Check1");
+						}
+//						TableRow row1 = coGbkResultKV.getValue().getOnly(tupleTag1);
+//						TableRow row2 = coGbkResultKV.getValue().getOnly(tupleTag2);
+						for(TableRow row2 : coGbkResultKV.getValue().getAll(tupleTag2)){
+							setTheTableRow(row, row2, "Learning", "Query_Output");
+						}
 						
-						setTheTableRow(row, row1, "Xtaas","PC_PCI");
-						setTheTableRow(row, row2, "Xtaas", "master_status");
+//						setTheTableRow(row, row1, "Learning","PC_PCI");
+//						setTheTableRow(row, row2, "Xtaas", "master_status");
 						
 						context.output(row);
 					}
 				}));
 		
-		return resultPCOllection;
+		return resultPCollection;
 	}
 	
 	interface Options extends PipelineOptions{
@@ -114,20 +120,24 @@ public class MainTestClass {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
+		
+		
+		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+		setTheSchema(fieldSchemaList, "Learning","Check1");
+		setTheSchema(fieldSchemaList, "Learning", "Query_Output");
+		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+		
 		PCollection<TableRow> pCollection1 = pipeline.apply(BigQueryIO.Read.from(table1Name));
 		PCollection<TableRow> pCollection2 = pipeline.apply(BigQueryIO.Read.from(table2Name));
 		
 		PCollection<TableRow> rowPCollection = joinTables(pCollection1, pCollection2);
 		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheSchema(fieldSchemaList, "Xtaas","PC_PCI");
-		setTheSchema(fieldSchemaList, "Xtaas", "master_status");
-		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-		
 		rowPCollection.apply(BigQueryIO.Write.to(options.getOutput())
 		.withSchema(tableSchema)
 		.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
 		.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
+		
+		pipeline.run();
 		
 	}
 }
