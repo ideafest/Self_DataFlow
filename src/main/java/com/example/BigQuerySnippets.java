@@ -20,7 +20,10 @@
  * BigQuery's javadoc.
  */
 
+
 package com.example;
+
+import com.google.cloud.bigquery.BigQuery;
 
 import com.google.api.client.util.Charsets;
 import com.google.api.gax.paging.Page;
