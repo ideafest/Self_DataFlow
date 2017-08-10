@@ -100,7 +100,7 @@ public class NewTestClass {
 						KV<String, CoGbkResult> coGbkResultKV = context.element();
 						String id = coGbkResultKV.getKey();
 						String table1Details = coGbkResultKV.getValue().getOnly(tupleTag1);
-						for(String table2Details : coGbkResultKV.getValue().getAll(tupleTag2)){
+						for(String table2Details : context.element().getValue().getAll(tupleTag2)){
 							context.output(KV.of(id, "Table1Details: "+table1Details +", Table2Details: "+table2Details));
 						}
 					}
