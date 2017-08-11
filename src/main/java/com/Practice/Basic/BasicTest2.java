@@ -45,8 +45,8 @@ public class BasicTest2 {
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2){
 		
-		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new BasicTest1.ReadFromTable1()));
-		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new BasicTest1.ReadFromTable2()));
+		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -113,7 +113,7 @@ public class BasicTest2 {
 		fieldSchemaList.add(new TableFieldSchema().setName("dispositionstatus").setType("STRING"));
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		BasicTest1.Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(BasicTest1.Options.class);
+		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
 		

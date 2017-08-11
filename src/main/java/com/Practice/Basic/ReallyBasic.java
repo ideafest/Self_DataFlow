@@ -10,7 +10,6 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
@@ -24,15 +23,20 @@ import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class BasicTest3 {
+public class ReallyBasic {
 	
-	private static final String table1Name = "vantage-167009:Learning.Source1";
-	private static final String table2Name = "vantage-167009:Learning.Source2";
+	
+	private static final String table1Name = "vantage-167009:Learning.Test1";
+	private static final String table2Name = "vantage-167009:Learning.Test2";
+	
+	static Logger LOG = LoggerFactory.getLogger(ReallyBasic.class);
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -42,28 +46,21 @@ public class BasicTest3 {
 		
 		return fieldSchemas;
 	}
+
 	
-	private static List<FieldMetaData> getTableSchemaDetails(String datasetName, String tableName){
-		List<FieldMetaData> fieldMetaDataList = new ArrayList<>();
-		for(Field field: getThemFields(datasetName,tableName)){
-			fieldMetaDataList.add(new FieldMetaData(field.getName(), field.getType().getValue().toString()));
-		}
-		return fieldMetaDataList;
-	}
-	
-	static class ReadFromTable extends DoFn<TableRow, KV<String, TableRow>> {
+	static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("_id");
+			String id = (String) row.get("id");
 			context.output(KV.of(id, row));
 		}
 	}
 	
-	static PCollection<String> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2){
+	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2){
 		
-		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable()));
-		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable()));
+		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -74,35 +71,47 @@ public class BasicTest3 {
 				.apply(CoGroupByKey.create());
 		
 		
-		PCollection<String> resultPCollection = pCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, String>() {
+		PCollection<TableRow> resultPCollection = pCollection
+				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
 						
 						TableRow newRow = new TableRow();
 						
+						LOG.info("IN THE FUNCTION");
+						
 						Iterator<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1).iterator();
 						Iterator<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2).iterator();
 						
-						List<FieldMetaData> fieldMetaDataList1 = getTableSchemaDetails("Learning","Source1");
-						List<FieldMetaData> fieldMetaDataList2 = getTableSchemaDetails("Learning","Source2");
+						List<Field> fieldMetaDataList1 = getThemFields("Learning","Test1");
+						List<Field> fieldMetaDataList2 = getThemFields("Learning","Test2");
 						
-						
-						while(rowIterator1.hasNext() || rowIterator2.hasNext()){
-							
+						LOG.info("GONNA ENTER THE LOOP");
+						do{
 							TableRow row1Details = rowIterator1.next();
 							TableRow row2Details = rowIterator2.next();
 							
-							for(FieldMetaData metaData : fieldMetaDataList1){
-								newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
+							LOG.info("GOING FOR ROW1DETAILS");
+							
+							if(row1Details != null){
+								LOG.info("NOTICE: "+row1Details.toPrettyString());
+								for(Field metaData : fieldMetaDataList1){
+									newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
+								}
 							}
 							
-							for(FieldMetaData metaData : fieldMetaDataList2){
-								newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
+							LOG.info("GOING FOR ROW2DETAILS");
+
+							if(row2Details != null){
+								LOG.info("NOTICE: "+row2Details.toPrettyString());
+								for(Field metaData : fieldMetaDataList2){
+									newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
+								}
 							}
-							context.output(newRow.toString());
-						}
+							
+							context.output(newRow);
+						}while(rowIterator1.hasNext() || rowIterator2.hasNext());
 					}
 				}));
 		
@@ -118,17 +127,12 @@ public class BasicTest3 {
 	
 	public static void main(String[] args) {
 		
-//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-//		fieldSchemaList.add(new TableFieldSchema().setName("campaignid").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("createddate").setType("TIMESTAMP"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("updateddate").setType("TIMESTAMP"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("prospecthandleduration").setType("INTEGER"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("DNI").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("call_date").setType("DATE"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("record_datetime").setType("TIMESTAMP"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("status").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("dispositionstatus").setType("STRING"));
-//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+		fieldSchemaList.add(new TableFieldSchema().setName("id").setType("STRING"));
+		fieldSchemaList.add(new TableFieldSchema().setName("value1").setType("STRING"));
+		fieldSchemaList.add(new TableFieldSchema().setName("value2").setType("STRING"));
+
+		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
@@ -137,21 +141,23 @@ public class BasicTest3 {
 		PCollection<TableRow> rowPCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from(table1Name));
 		PCollection<TableRow> rowPCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(table2Name));
 		
-//		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2);
+		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2);
 		
-		PCollection<String> pCollection = combineTableDetails(rowPCollection1, rowPCollection2);
-		pCollection.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-
-//      pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		pipeline.run();
 		
 	}
+	
+	@Test
+	public void test1(){
+		for(Field field: getThemFields("Learning", "Test1")){
+			System.out.println(field.getName());
+		}
+	}
 
-	
-	
 	
 }
