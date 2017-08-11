@@ -57,23 +57,6 @@ public class ReallyBasic {
 		}
 	}
 	
-	static List<TableRow> getTheNames(Iterator<TableRow> rowIterator){
-		List<TableRow> rowList = new ArrayList<>();
-		while(rowIterator.hasNext()){
-			rowList.add(rowIterator.next());
-		}
-		return rowList;
-	}
-	
-	static TableRow setTheNewRow(Iterable<TableRow> rowIterable1, Iterable<TableRow> rowIterable2, 	List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2){
-		
-		TableRow tableRow = null;
-		
-		
-		
-		return tableRow;
-	}
-	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));

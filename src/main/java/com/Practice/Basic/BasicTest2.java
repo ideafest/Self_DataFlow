@@ -10,7 +10,6 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
@@ -26,7 +25,6 @@ import com.google.cloud.dataflow.sdk.values.TupleTag;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class BasicTest2 {
@@ -63,28 +61,48 @@ public class BasicTest2 {
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
 						
-						TableRow newRow = new TableRow();
 						
-						Iterator<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1).iterator();
-						Iterator<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2).iterator();
+//						Iterator<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1).iterator();
+//						Iterator<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2).iterator();
+
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
 						
-						List<FieldMetaData> fieldMetaDataList1 = getTableSchemaDetails("Learning","Table1");
-						List<FieldMetaData> fieldMetaDataList2 = getTableSchemaDetails("Learning","Table2");
+						List<Field> fieldMetaDataList1 = getThemFields("Learning","Table1");
+						List<Field> fieldMetaDataList2 = getThemFields("Learning","Table2");
 						
 						
-						while(rowIterator1.hasNext() && rowIterator2.hasNext()){
+//						while(rowIterator1.hasNext() && rowIterator2.hasNext()){
+//
+//							TableRow row1Details = rowIterator1.next();
+//							TableRow row2Details = rowIterator2.next();
+//
+//							for(FieldMetaData metaData : fieldMetaDataList1){
+//								newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
+//							}
+//
+//							for(FieldMetaData metaData : fieldMetaDataList2){
+//								newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
+//							}
+//							context.output(newRow);
+//						}
+						
+						TableRow tableRow;
+						for(TableRow tableRow1 : rowIterable1){
 							
-							TableRow row1Details = rowIterator1.next();
-							TableRow row2Details = rowIterator2.next();
-							
-							for(FieldMetaData metaData : fieldMetaDataList1){
-								newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
+							for(TableRow tableRow2 : rowIterable2){
+								
+								tableRow = new TableRow();
+								
+								for(Field field: fieldMetaDataList1){
+									tableRow.set(field.getName(), tableRow1.get(field.getName()));
+								}
+								
+								for(Field field : fieldMetaDataList2){
+									tableRow.set(field.getName(), tableRow2.get(field.getName()));
+								}
+								context.output(tableRow);
 							}
-							
-							for(FieldMetaData metaData : fieldMetaDataList2){
-								newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
-							}
-							context.output(newRow);
 						}
 					}
 				}));
@@ -158,14 +176,6 @@ public class BasicTest2 {
 		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
 		
 		return fieldSchemas;
-	}
-	
-	private static List<FieldMetaData> getTableSchemaDetails(String datasetName, String tableName){
-		List<FieldMetaData> fieldMetaDataList = new ArrayList<>();
-		for(Field field: getThemFields(datasetName,tableName)){
-			fieldMetaDataList.add(new FieldMetaData(field.getName(), field.getType().getValue().toString()));
-		}
-		return fieldMetaDataList;
 	}
 	
 }
