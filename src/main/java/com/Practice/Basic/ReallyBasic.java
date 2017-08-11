@@ -57,6 +57,53 @@ public class ReallyBasic {
 		}
 	}
 	
+	static List<TableRow> getTheNames(Iterator<TableRow> rowIterator){
+		List<TableRow> rowList = new ArrayList<>();
+		while(rowIterator.hasNext()){
+			rowList.add(rowIterator.next());
+		}
+		return rowList;
+	}
+	
+	static TableRow setTheNewRow(Iterator<TableRow> rowIterator1, Iterator<TableRow> rowIterator2, 	List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2){
+		TableRow tableRow = new TableRow();
+		
+		List<TableRow> rowList1 = getTheNames(rowIterator1);
+		List<TableRow> rowList2 = getTheNames(rowIterator2);
+		
+		long size1 = rowList1.spliterator().getExactSizeIfKnown();
+		long size2 = rowList2.spliterator().getExactSizeIfKnown();
+		long length = (size1 > size2) ? size1: size2;
+		int i = 0,j = 0, counter = 0;
+		
+		while (counter < length){
+		
+			if(i+1 < size1){
+				for (Field field : fieldMetaDataList1){
+					tableRow.set(field.getName(), rowList1.get(i).get(field.getName()));
+				}
+				i++;
+			}else{
+				for (Field field : fieldMetaDataList1){
+					tableRow.set(field.getName(), rowList1.get(i).get(field.getName()));
+				}
+			}
+			
+			if(j+1 < size2){
+				for (Field field : fieldMetaDataList2){
+					tableRow.set(field.getName(), rowList2.get(i).get(field.getName()));
+				}
+				j++;
+			}else{
+				for (Field field : fieldMetaDataList2){
+					tableRow.set(field.getName(), rowList2.get(i).get(field.getName()));
+				}
+			}
+			counter++;
+		}
+		return tableRow;
+	}
+	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
@@ -84,34 +131,53 @@ public class ReallyBasic {
 						Iterator<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1).iterator();
 						Iterator<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2).iterator();
 						
+//						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+//						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
+//
+//						long sizeOfItr1 = rowIterable1.spliterator().getExactSizeIfKnown();
+//						long sizeOfItr2 = rowIterable2.spliterator().getExactSizeIfKnown();
+
 						List<Field> fieldMetaDataList1 = getThemFields("Learning","Test1");
 						List<Field> fieldMetaDataList2 = getThemFields("Learning","Test2");
 						
+						
+						TableRow tableRow = setTheNewRow(rowIterator1, rowIterator2, fieldMetaDataList1, fieldMetaDataList2);
+						context.output(tableRow);
+						
+//						int i = 0, j = 0;
+//
+//						while(i < sizeOfItr1 || j < sizeOfItr2){
+//							for( TableRow tableRow : rowIterable1 ){
+//
+//							}
+//						}
+//						while()
+						
 						LOG.info("GONNA ENTER THE LOOP");
-						do{
-							TableRow row1Details = rowIterator1.next();
-							TableRow row2Details = rowIterator2.next();
-							
-							LOG.info("GOING FOR ROW1DETAILS");
-							
-							if(row1Details != null){
-								LOG.info("NOTICE: "+row1Details.toPrettyString());
-								for(Field metaData : fieldMetaDataList1){
-									newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
-								}
-							}
-							
-							LOG.info("GOING FOR ROW2DETAILS");
-
-							if(row2Details != null){
-								LOG.info("NOTICE: "+row2Details.toPrettyString());
-								for(Field metaData : fieldMetaDataList2){
-									newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
-								}
-							}
-							
-							context.output(newRow);
-						}while(rowIterator1.hasNext() || rowIterator2.hasNext());
+//						while(rowIterator1.hasNext() || rowIterator2.hasNext()){
+//							TableRow row1Details = rowIterator1.next();
+//							TableRow row2Details = rowIterator2.next();
+//
+//							LOG.info("GOING FOR ROW1DETAILS");
+//
+//							if(row1Details != null){
+//								LOG.info("NOTICE: "+row1Details.toPrettyString());
+//								for(Field metaData : fieldMetaDataList1){
+//									newRow.set(metaData.getName(), row1Details.get(metaData.getName()));
+//								}
+//							}
+//
+//							LOG.info("GOING FOR ROW2DETAILS");
+//
+//							if(row2Details != null){
+//								LOG.info("NOTICE: "+row2Details.toPrettyString());
+//								for(Field metaData : fieldMetaDataList2){
+//									newRow.set(metaData.getName(), row2Details.get(metaData.getName()));
+//								}
+//							}
+//
+//							context.output(newRow);
+//						}
 					}
 				}));
 		
@@ -159,5 +225,12 @@ public class ReallyBasic {
 		}
 	}
 
-	
+	@Test
+	public void test2(){
+		List<Integer> intList = new ArrayList<>();
+		for(int i = 0;i<14;i++){
+			intList.add(i);
+		}
+		System.out.println(intList.spliterator().getExactSizeIfKnown());
+	}
 }
