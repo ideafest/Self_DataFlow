@@ -22,16 +22,35 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest2 {
+public class BetterReallyBasic {
 	
-	private static final String table1Name = "vantage-167009:Learning.Test1";
-	private static final String table2Name = "vantage-167009:Learning.Test2";
-	private static final String table3Name = "vantage-167009:Learning.Test3";
+	
+	private static final String table1Name = "vantage-167009:Learning.Source1";
+	private static final String table2Name = "vantage-167009:Learning.Source2";
+	
+	static Logger LOG = LoggerFactory.getLogger(ReallyBasic.class);
+	
+	private static List<Field> getThemFields(String datasetName, String tableName){
+		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
+		Table table = bigQuerySnippets.getTable(datasetName,tableName);
+		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
+		
+		return fieldSchemas;
+	}
+	
+	private static void setTheTableSchema(List<TableFieldSchema> fieldSchemaList, String tablePrefix, String datasetName, String tableName){
+		
+		for(Field field : getThemFields(datasetName, tableName)){
+			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
+		}
+	}
 	
 	static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
@@ -43,7 +62,7 @@ public class BasicTest2 {
 	}
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
-								, String table1Prefix, String table2Prefix, String table1, String table2){
+						, List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, String table1Prefix, String table2Prefix){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
 		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
@@ -62,12 +81,9 @@ public class BasicTest2 {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
-
+						
 						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
 						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						List<Field> fieldMetaDataList1 = getThemFields("Learning",table1);
-						List<Field> fieldMetaDataList2 = getThemFields("Learning",table2);
 						
 						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
@@ -76,9 +92,10 @@ public class BasicTest2 {
 								
 								tableRow = new TableRow();
 								
-								for(Field field: fieldMetaDataList1) {
+								for(Field field: fieldMetaDataList1){
 									tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
 								}
+								
 								for(Field field : fieldMetaDataList2){
 									tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
 								}
@@ -102,11 +119,13 @@ public class BasicTest2 {
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		
-		setTheTableSchema(fieldSchemaList, "A_","Learning", "Test1");
-		setTheTableSchema(fieldSchemaList, "B_","Learning", "Test2");
-		setTheTableSchema(fieldSchemaList, "C_", "Learning", "Test3");
+		setTheTableSchema(fieldSchemaList, "A_","Learning", "Source1");
+		setTheTableSchema(fieldSchemaList, "B_","Learning","Source2");
 		
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+		
+		List<Field> fieldMetaDataList1 = getThemFields("Learning","Source1");
+		List<Field> fieldMetaDataList2 = getThemFields("Learning","Source2");
 		
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
@@ -114,48 +133,17 @@ public class BasicTest2 {
 		
 		PCollection<TableRow> rowPCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from(table1Name));
 		PCollection<TableRow> rowPCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(table2Name));
-		PCollection<TableRow> rowPCollection3 = pipeline.apply(BigQueryIO.Read.named("Reader3").from(table3Name));
 		
-//		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2);
-		
-		PCollection<TableRow>  pCollection = combineTableDetails(rowPCollection1, rowPCollection2, "A_", "B_"
-					, "Test1", "Test2");
-//		PCollection<TableRow>  pCollection2 = combineTableDetails(pCollection, rowPCollection3, "B_", "C_"
-//					, "Test2", "Test3");
+		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2, fieldMetaDataList1
+				, fieldMetaDataList2, "A_", "B_");
 		
 		pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-		.withSchema(tableSchema)
-		.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-		.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		pipeline.run();
 		
-	}
-	
-
-	@Test
-	public void test2(){
-		String tableName = "vantage-167009:Learning.Table1";
-		String[] tokens = tableName.split("[.:]");
-		for(String str : tokens){
-			System.out.println(str);
-		}
-	}
-	private static List<Field> getThemFields(String datasetName, String tableName){
-		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable(datasetName,tableName);
-		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
-		
-		return fieldSchemas;
-	}
-	
-	private static void setTheTableSchema(List<TableFieldSchema> fieldSchemaList, String tablePrefix, String datasetName, String tableName){
-	
-		for(Field field : getThemFields(datasetName, tableName)){
-			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
-		}
-	
 	}
 	
 }
