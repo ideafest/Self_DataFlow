@@ -1,6 +1,11 @@
 package com.Practice.Basic;
 
+import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableRow;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
@@ -18,17 +23,26 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class BasicTest1 {
 	
-	private static final String table1Name = "vantage-167009:Learning.Table1";
-	private static final String table2Name = "vantage-167009:Learning.Table2";
+	private static final String table1Name = "vantage-167009:Learning.Test1";
+	private static final String table2Name = "vantage-167009:Learning.Test2";
 	
+	private static List<Field> getThemFields(String datasetName, String tableName){
+		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
+		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
+		Table table = bigQuerySnippets.getTable(datasetName,tableName);
+		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
+		
+		return fieldSchemas;
+	}
 	static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("campaignid");
+			String id = (String) row.get("id");
 			context.output(KV.of(id, row));
 		}
 	}
@@ -36,7 +50,7 @@ public class BasicTest1 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("campaignid");
+			String id = (String) row.get("id");
 			context.output(KV.of(id, row));
 		}
 	}
@@ -61,11 +75,13 @@ public class BasicTest1 {
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
 					
-						Iterator<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1).iterator();
-						Iterator<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2).iterator();
+						Iterable<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2);
 						
-						while(rowIterator1.hasNext() && rowIterator2.hasNext()){
-							context.output("T1 D: "+rowIterator1.next().toString() +", T2 D: "+rowIterator2.next().toString());
+						for(TableRow tableRow1 : rowIterator1){
+							for(TableRow tableRow2 : rowIterator2){
+								context.output("T1 D: "+tableRow1.toPrettyString() +", T2 D: "+tableRow2.toPrettyString());
+							}
 						}
 						
 					}

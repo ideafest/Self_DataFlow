@@ -27,7 +27,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest2 {
+public class BasicTest4 {
 	
 	private static final String table1Name = "vantage-167009:Learning.Test1";
 	private static final String table2Name = "vantage-167009:Learning.Test2";
@@ -37,23 +37,26 @@ public class BasicTest2 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("_id");
+			String id = (String) row.get("id");
 			context.output(KV.of(id, row));
 		}
 	}
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
-								, String table1Prefix, String table2Prefix, String table1, String table2){
+			, PCollection<TableRow> stringPCollection3, String table1Prefix, String table2Prefix, String table1, String table2){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
 		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> kvpCollection3 = stringPCollection3.apply(ParDo.named("FormatData3").of(new ReadFromTable1()));
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag3 = new TupleTag<>();
 		
 		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
 				.of(tupleTag1, kvpCollection1)
 				.and(tupleTag2, kvpCollection2)
+				.and(tupleTag3, kvpCollection3)
 				.apply(CoGroupByKey.create());
 		
 		
@@ -62,27 +65,34 @@ public class BasicTest2 {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
-
+						
 						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
 						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
+						Iterable<TableRow> rowIterable3 = element.getValue().getAll(tupleTag3);
 						
 						List<Field> fieldMetaDataList1 = getThemFields("Learning",table1);
 						List<Field> fieldMetaDataList2 = getThemFields("Learning",table2);
+						List<Field> fieldMetaDataList3 = getThemFields("Learning","Test3");
 						
 						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
 							
 							for(TableRow tableRow2 : rowIterable2){
 								
-								tableRow = new TableRow();
-								
-								for(Field field: fieldMetaDataList1) {
-									tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
+								for(TableRow tableRow3 : rowIterable3){
+									tableRow = new TableRow();
+									
+									for(Field field: fieldMetaDataList1) {
+										tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
+									}
+									for(Field field : fieldMetaDataList2){
+										tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
+									}
+									for(Field field : fieldMetaDataList3){
+										tableRow.set("C_" + field.getName(), tableRow3.get(field.getName()));
+									}
+									context.output(tableRow);
 								}
-								for(Field field : fieldMetaDataList2){
-									tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
-								}
-								context.output(tableRow);
 							}
 						}
 					}
@@ -101,24 +111,6 @@ public class BasicTest2 {
 	public static void main(String[] args) {
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		
-//		fieldSchemaList.add(new TableFieldSchema().setName("A__id").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_index").setType("INTEGER"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_sectionName").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_comments").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_campaignId").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_isdeleted").setType("BOOLEAN"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("A_isdirty").setType("BOOLEAN"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B__id").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_attribute").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_attributeComment").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_feedback").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_score").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_index").setType("INTEGER"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_raIndex").setType("INTEGER"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_campaignId").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_isdeleted").setType("BOOLEAN"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("B_isdirty").setType("BOOLEAN"));
 
 		setTheTableSchema(fieldSchemaList, "A_","Learning", "Test1");
 		setTheTableSchema(fieldSchemaList, "B_","Learning", "Test2");
@@ -133,32 +125,23 @@ public class BasicTest2 {
 		PCollection<TableRow> rowPCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from(table1Name));
 		PCollection<TableRow> rowPCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(table2Name));
 		PCollection<TableRow> rowPCollection3 = pipeline.apply(BigQueryIO.Read.named("Reader3").from(table3Name));
-		
+
 //		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2);
 		
-		PCollection<TableRow>  pCollection = combineTableDetails(rowPCollection1, rowPCollection2, "A_", "B_"
-					, "Test1", "Test2");
+		PCollection<TableRow>  pCollection = combineTableDetails(rowPCollection1, rowPCollection2, rowPCollection3,"A_", "B_"
+				, "Test1", "Test2");
 //		PCollection<TableRow>  pCollection2 = combineTableDetails(pCollection, rowPCollection3, "B_", "C_"
 //					, "Test2", "Test3");
 		
 		pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-		.withSchema(tableSchema)
-		.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-		.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		pipeline.run();
 		
 	}
 	
-
-	@Test
-	public void test2(){
-		String tableName = "vantage-167009:Learning.Table1";
-		String[] tokens = tableName.split("[.:]");
-		for(String str : tokens){
-			System.out.println(str);
-		}
-	}
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
@@ -169,11 +152,11 @@ public class BasicTest2 {
 	}
 	
 	private static void setTheTableSchema(List<TableFieldSchema> fieldSchemaList, String tablePrefix, String datasetName, String tableName){
-	
+		
 		for(Field field : getThemFields(datasetName, tableName)){
 			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
 		}
-	
+		
 	}
 	
 }

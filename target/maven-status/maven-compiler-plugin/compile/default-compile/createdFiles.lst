@@ -1,4 +1,5 @@
 com/example/BQJoin3.class
+com/Practice/Basic/BasicTest3$ReadFromTable1.class
 com/example/Something/FieldArrayList.class
 com/example/common/PubsubFileInjector$PubsubFileInjectorOptions.class
 com/example/WordCount.class
@@ -18,6 +19,7 @@ BQuery_v2$ExtractAndSend.class
 com/example/BQJoin$2.class
 com/example/SideView_v2$FilterSingleMonth.class
 com/example/SideFilter$Options.class
+com/Practice/Basic/BasicTest4$1.class
 com/example/Something/PerformOperations$1.class
 com/Practice/Basic/ReallyBasic$1.class
 com/Practice/Basic/BasicTest2$ReadFromTable1.class
@@ -32,8 +34,8 @@ com/example/BelowTheMean.class
 com/example/BigQueryTornadoes_v2$ExtractTornadoesFn.class
 com/example/BigQueryRandom$ExtractTornado.class
 com/example/BigQueryRandom$CountTornadoes.class
+com/Practice/Basic/BasicTest4$Options.class
 com/example/SideView_v2$BelowTheMean$1.class
-com/Practice/Basic/FieldMetaData.class
 com/Practice/NewTestClass$2.class
 com/example/SideViewTrial$PerformProcessing$1.class
 com/Practice/Basic/ReallyBasic$ReadFromTable1.class
@@ -41,6 +43,7 @@ com/example/BQJoin_2$1.class
 com/example/SideViewTrial$PerformProcessing.class
 com/example/BQJoin3$ExtractFromTable_1.class
 com/example/BQuery$ExtractWords.class
+com/Practice/Basic/BasicTest1_v2.class
 com/example/WindowedWordCount$AddTimestampFn.class
 com/Practice/Basic/BasicTest1$Options.class
 com/example/Something/GottaTestThis$ExtractDataFromMainTable.class
@@ -59,6 +62,7 @@ com/example/WordCount$WordCountOptions.class
 com/Practice/Basic/ReallyBasic$Options.class
 com/Practice/MainTestClass$Options.class
 com/Practice/TableDetails.class
+com/Practice/Basic/BasicTest3$ReadFromTable2.class
 com/example/BQThings$ExtractFromThatTable.class
 com/Practice/Basic/BasicTest1$1.class
 com/example/Something/CreateSchema$Accum.class
@@ -66,6 +70,7 @@ com/example/SideView_v2.class
 com/example/BQThings_v2.class
 com/Practice/Basic/ReallyBasic.class
 com/example/BQuery$ExtractAndSend.class
+com/Practice/Basic/BasicTest4$ReadFromTable1.class
 com/Practice/MainTestClass$1.class
 com/example/WindowedWordCount$FormatAsTableRowFn.class
 com/Practice/Basic/BasicTest2$Options.class
@@ -73,6 +78,7 @@ com/example/ExportFromBQuery$ExtractData.class
 com/example/BQThings_v2$BQOptions.class
 BQuery_v2.class
 com/example/WordCount$WordCountOptions$OutputFactory.class
+com/Practice/Basic/BasicTest4.class
 com/example/BQuery$1.class
 com/example/BQuery$Options.class
 com/example/LocalWordCount.class
@@ -110,10 +116,11 @@ com/example/DebuggingWordCount$WordCountOptions.class
 com/example/BigQueryTornadoes_v2.class
 com/example/WindowedWordCount$Options.class
 com/example/SideViewTrial$ExtractWords.class
-com/Practice/Basic/BasicTest3$ReadFromTable.class
+com/Practice/Basic/BasicTest1_v2$ReadFromTable2.class
 BQuery_v2$Options.class
 com/Practice/Basic/BasicTest2$1.class
 com/example/common/DataflowExampleUtils$1.class
+com/Practice/Basic/BasicTest1_v2$ReadFromTable1.class
 com/example/ExportFromBQ.class
 com/example/ExportFromBQ$BQOptions.class
 com/example/LocalWordCount$CountWords.class
@@ -155,6 +162,7 @@ com/example/LocalWordCount$FormatText.class
 com/example/Something/GottaTestThis$Options.class
 com/example/BigQueryRandom.class
 com/example/SideFilter$ExtractFromTable.class
+com/Practice/Basic/BasicTest1_v2$Options.class
 com/Practice/PJoin_v1$ExtractFromTable_1.class
 com/example/Something/PerformOperations.class
 com/example/common/ExamplePubsubTopicOptions.class
@@ -162,5 +170,6 @@ com/example/common/PubsubFileInjector$Bound.class
 com/example/BQThings.class
 com/example/DebuggingWordCount$FilterTextFn.class
 com/example/BigQuerySnippets.class
+com/Practice/Basic/BasicTest1_v2$1.class
 com/example/LocalWordCount$ExtractWords.class
 com/example/Something/CreateSchema.class
