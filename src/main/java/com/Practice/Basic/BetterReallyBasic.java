@@ -56,7 +56,7 @@ public class BetterReallyBasic {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow row = context.element();
-			String id = (String) row.get("_id");
+			String id = (String) row.get("_id") + row.get("index");
 			context.output(KV.of(id, row));
 		}
 	}

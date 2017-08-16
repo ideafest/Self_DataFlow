@@ -30,9 +30,9 @@ import java.util.List;
 
 public class BasicTest5 {
 	
-	private static final String table1Name = "vantage-167009:Learning.Test1";
-	private static final String table2Name = "vantage-167009:Learning.Test2";
-	private static final String table3Name = "vantage-167009:Learning.Test3";
+	private static final String table1Name = "vantage-167009:Learning.Source1";
+	private static final String table2Name = "vantage-167009:Learning.Source2";
+	private static final String table3Name = "vantage-167009:Learning.Source3";
 	private static final String table4Name = "vantage-167009:Learning.Source4";
 	
 	private static List<Field> fieldTrackerList = new ArrayList<>();
@@ -67,7 +67,7 @@ public class BasicTest5 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("id");
+			String id = (String) tableRow.get("_id") + tableRow.get("index");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -76,7 +76,7 @@ public class BasicTest5 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("B_R");
+			String id = (String) tableRow.get("B_campaignId");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -85,7 +85,7 @@ public class BasicTest5 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("R");
+			String id = (String) tableRow.get("campaignid");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -93,8 +93,6 @@ public class BasicTest5 {
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, PCollection<TableRow> stringPCollection3, List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2,
 			List<Field> fieldMetaDataList3, String table1Prefix, String table2Prefix, String table3Prefix){
-		
-		List<String> fieldTracker = new ArrayList<>();
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
 		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
@@ -107,89 +105,83 @@ public class BasicTest5 {
 				.and(tupleTag2, kvpCollection2)
 				.apply(CoGroupByKey.create());
 		
-		
 		PCollection<TableRow> resultPCollection = pCollection
 				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
-						
+
 						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
 						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
+
 						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
-							
+
 							for(TableRow tableRow2 : rowIterable2){
-								
+
 								tableRow = new TableRow();
-								
+
 								for(Field field: fieldMetaDataList1){
 									tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
-									fieldTracker.add(table1Prefix + field.getName());
+									fieldTrackerList.add(Field.of(table1Prefix + field.getName(), field.getType()));
 								}
-								
+
 								for(Field field : fieldMetaDataList2){
 									tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
-									fieldTracker.add(table2Prefix + field.getName());
+									fieldTrackerList.add(Field.of(table2Prefix + field.getName(), field.getType()));
 								}
 								context.output(tableRow);
 							}
 						}
 					}
 				}));
-		
-//		PCollection<KV<String, TableRow>> kvpCollection3 = resultPCollection.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
-//		PCollection<KV<String, TableRow>> kvpCollection4 = stringPCollection3.apply(ParDo.named("FormatData4").of(new ReadFromTable3()));
-//
-//		final TupleTag<TableRow> tupleTag3 = new TupleTag<>();
-//		final TupleTag<TableRow> tupleTag4 = new TupleTag<>();
-//
-//		PCollection<KV<String, CoGbkResult>> pCollection2 = KeyedPCollectionTuple
-//				.of(tupleTag3, kvpCollection3)
-//				.and(tupleTag4, kvpCollection4)
-//				.apply(CoGroupByKey.create());
-//
-//		List<String> tempfield = fieldTracker;
-//
-//		PCollection<TableRow> resultPCollection2 = pCollection2.apply(ParDo.named("Process2")
-//				.of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-//					@Override
-//					public void processElement(ProcessContext context) throws Exception {
-//
-//						KV<String, CoGbkResult> element = context.element();
-//
-//						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag3);
-//						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag4);
-//
-//						TableRow tableRow;
-//						for(TableRow tableRow1 : rowIterable1){
-//
-//							for(TableRow tableRow2 : rowIterable2){
-//
-//								tableRow = new TableRow();
-//
-////								for(Field field: fieldMetaDataList1){
-////									tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
-////									fieldTracker.add(table1Prefix + field.getName());
-////								}
-//
-//								for(String field : tempfield){
-//									tableRow.set(field, tableRow1.get(field));
-//								}
-//
-//								for(Field field : fieldMetaDataList3){
-//									tableRow.set(table3Prefix + field.getName(), tableRow2.get(field.getName()));
-//									fieldTracker.add(table3Prefix + field.getName());
-//								}
-//								context.output(tableRow);
-//							}
-//						}
-//
-//					}
-//				}));
-		
-		return resultPCollection;
+
+		PCollection<KV<String, TableRow>> kvpCollection3 = resultPCollection.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
+		PCollection<KV<String, TableRow>> kvpCollection4 = stringPCollection3.apply(ParDo.named("FormatData4").of(new ReadFromTable3()));
+
+		final TupleTag<TableRow> tupleTag3 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag4 = new TupleTag<>();
+
+		PCollection<KV<String, CoGbkResult>> pCollection2 = KeyedPCollectionTuple
+				.of(tupleTag3, kvpCollection3)
+				.and(tupleTag4, kvpCollection4)
+				.apply(CoGroupByKey.create());
+
+
+		PCollection<TableRow> resultPCollection2 = pCollection2.apply(ParDo.named("Process2")
+				.of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+
+						KV<String, CoGbkResult> element = context.element();
+
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag3);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag4);
+
+						TableRow tableRow;
+						for(TableRow tableRow1 : rowIterable1){
+
+							for(TableRow tableRow2 : rowIterable2){
+
+								tableRow = new TableRow();
+
+								for(Field field : fieldTrackerList){
+									tableRow.set(field.getName(), tableRow1.get(field.getName()));
+								}
+
+								for(Field field : fieldMetaDataList3){
+									tableRow.set(table3Prefix + field.getName(), tableRow2.get(field.getName()));
+									fieldTrackerList.add(Field.of(table3Prefix + field.getName(), field.getType()));
+								}
+								context.output(tableRow);
+
+							}
+
+						}
+					}
+				}));
+
+		return resultPCollection2;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -208,17 +200,22 @@ public class BasicTest5 {
 		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(table3Name));
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheTableSchema(fieldSchemaList, "A_","Learning", "Test1");
-		setTheTableSchema(fieldSchemaList, "B_","Learning", "Test2");
-		setTheTableSchema(fieldSchemaList, "C_","Learning", "Test3");
+		setTheTableSchema(fieldSchemaList, "A_","Learning", "Source1");
+		setTheTableSchema(fieldSchemaList, "B_","Learning", "Source2");
+		setTheTableSchema(fieldSchemaList, "C_","Learning", "Source3");
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Learning","Test1");
-		List<Field> fieldMetaDataList2 = getThemFields("Learning","Test2");
-		List<Field> fieldMetaDataList3 = getThemFields("Learning","Test3");
+		List<Field> fieldMetaDataList1 = getThemFields("Learning","Source1");
+		List<Field> fieldMetaDataList2 = getThemFields("Learning","Source2");
+		List<Field> fieldMetaDataList3 = getThemFields("Learning","Source3");
 		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table
 			, fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, "A_", "B_", "C_");
+		
+//		PCollection<String> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table
+//				, fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, "A_", "B_", "C_");
+		
+//		rowPCollection.apply(TextIO.Write.to(options.getOutput()));
 		
 		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 				.withSchema(tableSchema)
