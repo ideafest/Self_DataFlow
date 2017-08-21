@@ -46,4 +46,6 @@ public class Queries {
 			"createdby,updateddate,updatedby,version,isdeleted,isdirty \n" +
 			"FROM [vantage-167009:Xtaas.campaign] WHERE status = 'RUNNING' ;";
 	
+	public final String master_status = "vantage-167009:Xtaas.master_status";
+	
 }
