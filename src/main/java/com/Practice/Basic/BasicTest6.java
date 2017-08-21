@@ -147,7 +147,7 @@ public class BasicTest6 {
 	
 	@Test
 	public void test1(){
-		for(Field field : getThemFields("Xtaas", "prospectcalllog")){
+		for(Field field : getThemFields("Xtaas", "dnclist")){
 			System.out.println(field.getName() + ", " + field.getType().getValue());
 		}
 	}

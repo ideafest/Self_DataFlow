@@ -6,6 +6,7 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/ExamplePubsubTopicOptions.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/LocalMinimalWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQuerySnippets.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest5.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideFilter.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQThings.java
@@ -22,9 +23,11 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/DebuggingWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WindowedWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/PerformOperations.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/Queries.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideView_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest3.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WordCount.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest6.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/GottaTestThis.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryRandom.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportAsCSV.java
@@ -33,12 +36,14 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideViewTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/ReallyBasic.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQuery.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Joins/Join3.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromTable.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromBQuery.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/JSAPTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest4.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/CreateSchema.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest7.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest1_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/DataflowExampleOptions.java

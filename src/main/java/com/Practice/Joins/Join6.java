@@ -1,5 +1,6 @@
-package com.Practice.Basic;
+package com.Practice.Joins;
 
+import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
@@ -22,20 +23,17 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest7 {
+public class Join6 {
 	
 	public static final String feedbackResponseList = "vantage-167009:Xtaas.pci_feedbackResponseList";
 	public static final String responseAttributes = "vantage-167009:Xtaas.pci_responseAttributes";
 	public static final String pciProspectCall = "vantage-167009:Xtaas.pci_prospectcall";
 	
 	private static List<Field> fieldTrackerList = new ArrayList<>();
-	static Logger logger = LoggerFactory.getLogger(BasicTest5.class);
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -109,8 +107,8 @@ public class BasicTest7 {
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, PCollection<TableRow> stringPCollection3, PCollection<TableRow> stringPCollection4,
-			List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
-	        String table1Prefix, String table2Prefix, String table3Prefix, String table4Prefix){
+			                                         List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
+			                                         String table1Prefix, String table2Prefix, String table3Prefix, String table4Prefix){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
 		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
@@ -241,20 +239,7 @@ public class BasicTest7 {
 					}
 				}));
 		
-		PCollection<TableRow> filteredPCollection = resultPCollection3.apply(ParDo.named("Filtering").of(
-				new DoFn<TableRow, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String condition = (String) tableRow.get("A_sectionName");
-						if(!(condition == "Customer Satisfaction")){
-							context.output(tableRow);
-						}
-					}
-				}
-		));
-		
-		return filteredPCollection;
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -290,6 +275,7 @@ public class BasicTest7 {
 				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
 				"A_", "B_", "C_", "D_");
 		
+		
 		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 				.withSchema(tableSchema)
 				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
@@ -297,5 +283,5 @@ public class BasicTest7 {
 		
 		pipeline.run();
 	}
-
+	
 }

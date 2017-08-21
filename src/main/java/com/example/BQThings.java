@@ -20,55 +20,13 @@ import java.util.List;
 
 public class BQThings {
 	
-	private static class ExtractFromThatTable extends DoFn<TableRow, TableRow>{
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			context.output(context.element());
-		}
-	}
-	
-//	private static class GetThemFilteredValues extends DoFn<>
-	
-	private static class GetThemFiltered extends DoFn<TableRow, String>{
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			TableRow row = context.element();
-			String field = (String) row.get("input_field_name");
-			
-		}
-	}
-	
-	
-	public static class ExtractFromTableRow extends PTransform<PCollection<TableRow>, PCollection<String>>{
-		
-		@Override
-		public PCollection<String> apply(PCollection<TableRow> tableRow){
-			PCollection<TableRow> getThatRow = tableRow.apply(ParDo.of(new ExtractFromThatTable()));
-			PCollection<String> result = getThatRow.apply(ParDo.of(new GetThemFiltered()));
-			return result;
-		}
-	}
-
-	public static List<Field> getThemFields(){
-		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable("Learning","shakespeare_copy");
-		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
-		
-		return fieldSchemas;
-	}
 	
 	private interface Options extends PipelineOptions{
 		@Description("Input table Path")
-		@Default.String("zimetrics:Learning.weather_stations_copy")
+		@Default.String("vantage-167009:Xtaas.dnclist")
 		String getInput();
 		void setInput(String input);
-//
-//		@Description("Side input table path")
-//		@Default.String("zimetrics:Learning.weather_filter")
-//		String getSideInput();
-//		void setSideInput(String sideInput);
-		
+	
 		@Description("Output path for String")
 		@Validation.Required
 		String getOutput();
@@ -82,18 +40,17 @@ public class BQThings {
 		Pipeline pipeline = Pipeline.create(options);
 		
 		pipeline.apply(BigQueryIO.Read.from(options.getInput()))
-				.apply(new ExtractFromTableRow())
+				.apply(ParDo.of(new DoFn<TableRow, String>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						context.output(context.element().toPrettyString());
+					}
+				}))
 				.apply(TextIO.Write.to(options.getOutput()));
 				
 		pipeline.run();
 		
 	}
 	
-	@Test
-	public void test1(){
-		for(Field field : getThemFields()){
-			System.out.println(field.getName());
-		}
-	}
 	
 }

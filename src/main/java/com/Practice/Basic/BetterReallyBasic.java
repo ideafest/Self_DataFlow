@@ -117,22 +117,19 @@ public class BetterReallyBasic {
 	
 	public static void main(String[] args) {
 		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+		Pipeline pipeline = Pipeline.create(options);
 		
+		PCollection<TableRow> rowPCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from(table1Name));
+		PCollection<TableRow> rowPCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(table2Name));
+		
+		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		setTheTableSchema(fieldSchemaList, "A_","Learning", "Source1");
 		setTheTableSchema(fieldSchemaList, "B_","Learning","Source2");
-		
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		List<Field> fieldMetaDataList1 = getThemFields("Learning","Source1");
 		List<Field> fieldMetaDataList2 = getThemFields("Learning","Source2");
-		
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
-		
-		
-		PCollection<TableRow> rowPCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from(table1Name));
-		PCollection<TableRow> rowPCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(table2Name));
 		
 		PCollection<TableRow> pCollection = combineTableDetails(rowPCollection1, rowPCollection2, fieldMetaDataList1
 				, fieldMetaDataList2, "A_", "B_");
