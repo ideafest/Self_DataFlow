@@ -66,7 +66,7 @@ public class BasicTest7 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("_id") + tableRow.get("index");
+			String id = (String) tableRow.get("_id");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -93,7 +93,7 @@ public class BasicTest7 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("C_campaignId");
+			String id = (String) tableRow.get("C__id");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -241,20 +241,7 @@ public class BasicTest7 {
 					}
 				}));
 		
-		PCollection<TableRow> filteredPCollection = resultPCollection3.apply(ParDo.named("Filtering").of(
-				new DoFn<TableRow, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String condition = (String) tableRow.get("A_sectionName");
-						if(!(condition == "Customer Satisfaction")){
-							context.output(tableRow);
-						}
-					}
-				}
-		));
-		
-		return filteredPCollection;
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -269,22 +256,22 @@ public class BasicTest7 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(feedbackResponseList));
-		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(responseAttributes));
-		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(pciProspectCall));
-		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").fromQuery(queries.CMPGN));
+		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.prospectCallLog));
+		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.prospectCall));
+		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").fromQuery(queries.prospect));
+		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").fromQuery(queries.answers));
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
+		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "prospectcalllog");
+		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "prospectcall");
+		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "prospect");
+		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "answers");
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
-		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
-		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","pci_prospectcall");
-		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "CMPGN");
+		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","prospectcalllog");
+		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","prospectcall");
+		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","prospect");
+		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "answers");
 		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
 				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,

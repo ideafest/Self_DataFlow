@@ -1,5 +1,7 @@
 package com.Practice.Basic;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
+
 public class Queries {
 	
 	public final String PC_PCI = "(SELECT PC._id _id, PC.prospectcallid prospectcallid, PC.twiliocallsid twiliocallsid, PC.agentid agentid, PC.previousprospectcallid previousprospectcallid, PC.deliveredassetid deliveredassetid, \n" +
@@ -48,4 +50,11 @@ public class Queries {
 	
 	public final String master_status = "vantage-167009:Xtaas.master_status";
 	
+	public final String answers = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.index index, a.answerskey answerskey, a.answersvalue answersvalue, a.isdeleted isdeleted, a.isdirty isdirty\n" +
+			"   FROM [vantage-167009:Xtaas.pci_answers] a\n" +
+			"   JOIN [vantage-167009:Xtaas.prospectcalllog] b ON a._id = b._id;";
+	
+	public final String prospect = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.status status, a.source source, a.sourceid sourceid, a.campaigncontactid campaigncontactid, a.prefix, a.firstname firstname, a.lastname lastname, a.suffix suffix, a.company company, a.title title, a.department department, a.phone phone, a.industry industry, a.industrylist industrylist, a.email email, a.addressline1 addressline1, a.addressline2 addressline2, a.city city, a.zipcode zipcode, a.country country, a.extension extension, a.statecode statecode, a.optedin optedin, a.callbacktimeinms callbacktimeinms, a.isdeleted isdeleted,a.isdirty isdirty \n" +
+			"   FROM [vantage-167009:Xtaas.pci_prospect] a\n" +
+			"   JOIN [vantage-167009:Xtaas.prospectcalllog] b ON a._id = b._id;";
 }
