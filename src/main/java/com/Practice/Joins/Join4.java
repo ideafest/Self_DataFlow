@@ -1,5 +1,6 @@
-package com.Practice.Basic;
+package com.Practice.Joins;
 
+import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
@@ -22,14 +23,11 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest6 {
-
-	private static Queries queries = new Queries();
+public class Join4 {
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -46,7 +44,7 @@ public class BasicTest6 {
 			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
 		}
 	}
-
+	
 	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -68,7 +66,7 @@ public class BasicTest6 {
 	}
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
-			,List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, String table1Prefix, String table2Prefix){
+			, List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, String table1Prefix, String table2Prefix){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
 		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable2()));
@@ -122,6 +120,7 @@ public class BasicTest6 {
 	}
 	
 	public static void main(String[] args) {
+		Queries queries = new Queries();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
@@ -131,27 +130,20 @@ public class BasicTest6 {
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "dnclist");
 		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "CMPGN");
-
+		
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		List<Field> fieldMetaDataList1 = getThemFields("Xtaas", "dnclist");
 		List<Field> fieldMetaDataList2 = getThemFields("Xtaas", "CMPGN");
 		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, fieldMetaDataList1, fieldMetaDataList2, "A_", "B_");
-
+		
 		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 				.withSchema(tableSchema)
 				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
 				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		pipeline.run();
-	}
-	
-	@Test
-	public void test1(){
-		for(Field field : getThemFields("Xtaas", "dnclist")){
-			System.out.println(field.getName() + ", " + field.getType().getValue());
-		}
 	}
 	
 }

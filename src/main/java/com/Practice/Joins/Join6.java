@@ -11,29 +11,28 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
-import com.google.cloud.dataflow.sdk.transforms.DoFn;
-import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import com.google.cloud.dataflow.sdk.transforms.*;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Join6 {
 	
-	public static final String feedbackResponseList = "vantage-167009:Xtaas.pci_feedbackResponseList";
-	public static final String responseAttributes = "vantage-167009:Xtaas.pci_responseAttributes";
-	public static final String pciProspectCall = "vantage-167009:Xtaas.pci_prospectcall";
-	
 	private static List<Field> fieldTrackerList = new ArrayList<>();
+	static Logger logger = LoggerFactory.getLogger(Join6.class);
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -239,7 +238,19 @@ public class Join6 {
 					}
 				}));
 		
-		return resultPCollection3;
+		PCollection<TableRow> fileredPCollection = resultPCollection3.apply(ParDo.named("Filter").of(new DoFn<TableRow, TableRow>() {
+			public void processElement(ProcessContext context) throws Exception {
+				
+				TableRow tableRow = context.element();
+				String condition = (String) tableRow.get("A_sectionName");
+				logger.info("NOTICE : " + condition);
+				if(!(condition.equals("Customer Satisfaction"))){
+					context.output(tableRow);
+				}
+			}
+		}));
+		
+		return fileredPCollection;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -254,32 +265,35 @@ public class Join6 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(feedbackResponseList));
-		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(responseAttributes));
-		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(pciProspectCall));
+		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.feedbackResponseList));
+		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(queries.responseAttributes));
+		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(queries.pciProspectCall));
 		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").fromQuery(queries.CMPGN));
-		
+
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
 		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
 		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
 		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-		
+
 		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
 		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
 		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","pci_prospectcall");
 		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "CMPGN");
-		
+
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
 				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
 				"A_", "B_", "C_", "D_");
-		
-		
+
+
 		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 				.withSchema(tableSchema)
 				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
 				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+
+//		source1Table.apply(ParDo.named("Filter").of(new FilteringData()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}

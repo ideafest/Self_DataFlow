@@ -22,6 +22,7 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -283,6 +284,23 @@ public class BasicTest7 {
 				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		pipeline.run();
+	}
+	
+	
+	@Test
+	public void test1(){
+		int v1 = 8000000;
+		int v2 = 20;
+		long startTime = System.currentTimeMillis();
+		for(int i = 0;i < v1 ;i++){
+			for(int j = 0;j < v2; j++)
+			{
+				//nothing
+			}
+		}
+		long endTime = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		System.out.println("Total Time Taken : "+ totalTime);
 	}
 
 }

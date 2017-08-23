@@ -57,4 +57,9 @@ public class Queries {
 	public final String prospect = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.status status, a.source source, a.sourceid sourceid, a.campaigncontactid campaigncontactid, a.prefix, a.firstname firstname, a.lastname lastname, a.suffix suffix, a.company company, a.title title, a.department department, a.phone phone, a.industry industry, a.industrylist industrylist, a.email email, a.addressline1 addressline1, a.addressline2 addressline2, a.city city, a.zipcode zipcode, a.country country, a.extension extension, a.statecode statecode, a.optedin optedin, a.callbacktimeinms callbacktimeinms, a.isdeleted isdeleted,a.isdirty isdirty \n" +
 			"   FROM [vantage-167009:Xtaas.pci_prospect] a\n" +
 			"   JOIN [vantage-167009:Xtaas.prospectcalllog] b ON a._id = b._id;";
+	
+	public final String dncList = "vantage-167009:Xtaas.dnclist";
+	public final String feedbackResponseList = "vantage-167009:Xtaas.pci_feedbackResponseList";
+	public final String responseAttributes = "vantage-167009:Xtaas.pci_responseAttributes";
+	public final String pciProspectCall = "vantage-167009:Xtaas.pci_prospectcall";
 }
