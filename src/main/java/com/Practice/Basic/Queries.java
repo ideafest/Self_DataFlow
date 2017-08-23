@@ -1,7 +1,5 @@
 package com.Practice.Basic;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-
 public class Queries {
 	
 	public final String PC_PCI = "(SELECT PC._id _id, PC.prospectcallid prospectcallid, PC.twiliocallsid twiliocallsid, PC.agentid agentid, PC.previousprospectcallid previousprospectcallid, PC.deliveredassetid deliveredassetid, \n" +
@@ -59,7 +57,9 @@ public class Queries {
 			"   JOIN [vantage-167009:Xtaas.prospectcalllog] b ON a._id = b._id;";
 	
 	public final String dncList = "vantage-167009:Xtaas.dnclist";
-	public final String feedbackResponseList = "vantage-167009:Xtaas.pci_feedbackResponseList";
-	public final String responseAttributes = "vantage-167009:Xtaas.pci_responseAttributes";
+	public final String pciFeedbackResponseList = "vantage-167009:Xtaas.pci_feedbackResponseList";
+	public final String pciResponseAttributes = "vantage-167009:Xtaas.pci_responseAttributes";
 	public final String pciProspectCall = "vantage-167009:Xtaas.pci_prospectcall";
+	public final String pciQaFeedback = "vantage-167009:Xtaas.pci_qafeedback";
+	public final String qaFeedbackFormAttributes = "vantage-167009:Xtaas.qafeedbackformattributes";
 }

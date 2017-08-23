@@ -10,7 +10,6 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
@@ -23,17 +22,14 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest7 {
+public class BasicTest8 {
 	
 	
 	private static List<Field> fieldTrackerList = new ArrayList<>();
-	static Logger logger = LoggerFactory.getLogger(BasicTest7.class);
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -51,14 +47,14 @@ public class BasicTest7 {
 		}
 	}
 	
-	private static class ConvertToString extends DoFn<TableRow, String> {
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			
-			context.output(context.element().toPrettyString());
-			
-		}
-	}
+//	private static class ConvertToString extends DoFn<TableRow, String> {
+//		@Override
+//		public void processElement(ProcessContext context) throws Exception {
+//
+//			context.output(context.element().toPrettyString());
+//
+//		}
+//	}
 	
 	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -91,7 +87,7 @@ public class BasicTest7 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("C_campaignId");
+			String id = (String) tableRow.get("B_attribute");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -100,23 +96,12 @@ public class BasicTest7 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("_id");
+			String id = (String) tableRow.get("attribute");
 			context.output(KV.of(id, tableRow));
 		}
 	}
 	
-	private static class FilterData extends DoFn<TableRow, TableRow> {
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			TableRow tableRow = context.element();
-			String condition = (String) tableRow.get("A_sectionName");
-			logger.info("NOTICE : " + condition);
-			if (!(condition.equals("Customer Satisfaction"))) {
-				context.output(tableRow);
-			}
-		}
-	}
-	static PCollection<String> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
+	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, PCollection<TableRow> stringPCollection3, PCollection<TableRow> stringPCollection4,
 			                                         List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
 			                                         String table1Prefix, String table2Prefix, String table3Prefix, String table4Prefix){
@@ -250,14 +235,7 @@ public class BasicTest7 {
 					}
 				}));
 		
-		PCollection<String> collection = resultPCollection3.apply(ParDo.of(new DoFn<TableRow, String>() {
-			@Override
-			public void processElement(ProcessContext context) throws Exception {
-				context.output(context.element().toPrettyString());
-			}
-		}));
-		
-		return collection;
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -274,34 +252,35 @@ public class BasicTest7 {
 		
 		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.pciFeedbackResponseList));
 		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(queries.pciResponseAttributes));
-		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(queries.pciProspectCall));
-		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").fromQuery(queries.CMPGN));
+		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").fromQuery(queries.PC_PCI));
+		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").from(queries.qaFeedbackFormAttributes));
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
 		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
+		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "PC_PCI");
+		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "qafeedbackformattributes");
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
 		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
-		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","pci_prospectcall");
-		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "CMPGN");
+		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","PC_PCI");
+		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "qafeedbackformattributes");
 		
-		PCollection<String> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
+		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
 				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
 				"A_", "B_", "C_", "D_");
 		
 		
-//		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 
-		rowPCollection//.apply(ParDo.named("Filter").of(new FilteringData()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+//		source1Table.apply(ParDo.named("Filter").of(new FilteringData()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}
+	
 }

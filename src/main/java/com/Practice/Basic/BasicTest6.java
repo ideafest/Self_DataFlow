@@ -51,7 +51,7 @@ public class BasicTest6 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("campaignId");
+			String id = (String) tableRow.get("_id");
 			if (!(id == null)) {
 				context.output(KV.of(id, tableRow));
 			}
@@ -125,17 +125,17 @@ public class BasicTest6 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.dncList));
-		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.CMPGN));
+		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.pciResponseAttributes));
+		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.PC_PCI));
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "dnclist");
-		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "CMPGN");
+		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_responseAttributes");
+		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "PC_PCI");
 
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Xtaas", "dnclist");
-		List<Field> fieldMetaDataList2 = getThemFields("Xtaas", "CMPGN");
+		List<Field> fieldMetaDataList1 = getThemFields("Xtaas", "pci_responseAttributes");
+		List<Field> fieldMetaDataList2 = getThemFields("Xtaas", "PC_PCI");
 		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, fieldMetaDataList1, fieldMetaDataList2, "A_", "B_");
 

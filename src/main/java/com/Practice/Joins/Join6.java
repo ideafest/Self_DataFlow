@@ -11,12 +11,12 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
-import com.google.cloud.dataflow.sdk.transforms.*;
+import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
@@ -104,6 +104,17 @@ public class Join6 {
 		}
 	}
 	
+	private static class FilterData extends DoFn<TableRow, TableRow> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow tableRow = context.element();
+			String condition = (String) tableRow.get("A_sectionName");
+			logger.info("NOTICE : " + condition);
+			if (!(condition.equals("Customer Satisfaction"))) {
+				context.output(tableRow);
+			}
+		}
+	}
 	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, PCollection<TableRow> stringPCollection3, PCollection<TableRow> stringPCollection4,
 			                                         List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
@@ -238,19 +249,7 @@ public class Join6 {
 					}
 				}));
 		
-		PCollection<TableRow> fileredPCollection = resultPCollection3.apply(ParDo.named("Filter").of(new DoFn<TableRow, TableRow>() {
-			public void processElement(ProcessContext context) throws Exception {
-				
-				TableRow tableRow = context.element();
-				String condition = (String) tableRow.get("A_sectionName");
-				logger.info("NOTICE : " + condition);
-				if(!(condition.equals("Customer Satisfaction"))){
-					context.output(tableRow);
-				}
-			}
-		}));
-		
-		return fileredPCollection;
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -265,8 +264,8 @@ public class Join6 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.feedbackResponseList));
-		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(queries.responseAttributes));
+		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.pciFeedbackResponseList));
+		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(queries.pciResponseAttributes));
 		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").from(queries.pciProspectCall));
 		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").fromQuery(queries.CMPGN));
 
