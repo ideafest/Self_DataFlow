@@ -62,4 +62,10 @@ public class Queries {
 	public final String pciProspectCall = "vantage-167009:Xtaas.pci_prospectcall";
 	public final String pciQaFeedback = "vantage-167009:Xtaas.pci_qafeedback";
 	public final String qaFeedbackFormAttributes = "vantage-167009:Xtaas.qafeedbackformattributes";
+	
+	
+	public final String source1 = "vantage-167009:Learning.Source1";
+	public final String source2 = "vantage-167009:Learning.Source2";
+	public final String source3 = "vantage-167009:Learning.Source3";
+	public final String source4 = "vantage-167009:Learning.Source4";
 }

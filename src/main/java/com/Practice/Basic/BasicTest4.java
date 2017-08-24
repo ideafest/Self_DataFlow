@@ -4,10 +4,8 @@ import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.*;
+import com.google.cloud.bigquery.Field.Type;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.options.Description;
@@ -172,4 +170,14 @@ public class BasicTest4 {
 		
 	}
 	
+	@Test
+	public void test1(){
+		for(Field field : getThemFields("Xtaas","pci_feedbackResponseList")){
+			System.out.println(field.getName() +", "+field.getType().toString());
+		}
+		
+		List<Field> fieldList = new ArrayList<>();
+//		fieldList.add(Field.of("name",new Type(LegacySQLTypeName.STRING)));
+		Field field = Field.of("name", Type.string());
+	}
 }

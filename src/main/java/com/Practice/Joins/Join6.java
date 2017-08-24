@@ -11,6 +11,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
@@ -104,14 +105,20 @@ public class Join6 {
 		}
 	}
 	
-	private static class FilterData extends DoFn<TableRow, TableRow> {
+	private static class FilteringData extends DoFn<TableRow, String> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
 			String condition = (String) tableRow.get("A_sectionName");
-			logger.info("NOTICE : " + condition);
-			if (!(condition.equals("Customer Satisfaction"))) {
-				context.output(tableRow);
+//			logger.info("NOTICE : " + condition);
+//			if (!(condition.equals("Customer Satisfaction"))) {
+//				context.output(tableRow.toPrettyString());
+//			}
+			if(condition == null){
+				context.output("null, "+tableRow.toPrettyString());
+			}
+			else{
+				context.output(condition+", "+tableRow.toPrettyString());
 			}
 		}
 	}
@@ -286,13 +293,13 @@ public class Join6 {
 				"A_", "B_", "C_", "D_");
 
 
-		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-				.withSchema(tableSchema)
-				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
-
-//		source1Table.apply(ParDo.named("Filter").of(new FilteringData()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+//		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+//				.withSchema(tableSchema)
+//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		
+		rowPCollection.apply(ParDo.named("Filter").of(new FilteringData()))
+				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}

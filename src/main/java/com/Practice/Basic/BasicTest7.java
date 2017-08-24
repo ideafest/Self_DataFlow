@@ -116,7 +116,7 @@ public class BasicTest7 {
 			}
 		}
 	}
-	static PCollection<String> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
+	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, PCollection<TableRow> stringPCollection3, PCollection<TableRow> stringPCollection4,
 			                                         List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
 			                                         String table1Prefix, String table2Prefix, String table3Prefix, String table4Prefix){
@@ -185,22 +185,15 @@ public class BasicTest7 {
 						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag3);
 						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag4);
 						
-						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
 							
 							for(TableRow tableRow2 : rowIterable2){
-								
-								tableRow = new TableRow();
-								
-								for(Field field : fieldTrackerList){
-									tableRow.set(field.getName(), tableRow1.get(field.getName()));
-								}
-								
+
 								for(Field field : fieldMetaDataList3){
-									tableRow.set(table3Prefix + field.getName(), tableRow2.get(field.getName()));
+									tableRow1.set(table3Prefix + field.getName(), tableRow2.get(field.getName()));
 									fieldTrackerList.add(Field.of(table3Prefix + field.getName(), field.getType()));
 								}
-								context.output(tableRow);
+								context.output(tableRow1);
 								
 							}
 							
@@ -229,35 +222,21 @@ public class BasicTest7 {
 						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag5);
 						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag6);
 						
-						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
 							
 							for(TableRow tableRow2 : rowIterable2){
 								
-								tableRow = new TableRow();
-								
-								for(Field field : fieldTrackerList){
-									tableRow.set(field.getName(), tableRow1.get(field.getName()));
-								}
-								
 								for(Field field : fieldMetaDataList4){
-									tableRow.set(table4Prefix + field.getName(), tableRow2.get(field.getName()));
+									tableRow1.set(table4Prefix + field.getName(), tableRow2.get(field.getName()));
 									fieldTrackerList.add(Field.of(table4Prefix + field.getName(), field.getType()));
 								}
-								context.output(tableRow);
+								context.output(tableRow1);
 							}
 						}
 					}
 				}));
 		
-		PCollection<String> collection = resultPCollection3.apply(ParDo.of(new DoFn<TableRow, String>() {
-			@Override
-			public void processElement(ProcessContext context) throws Exception {
-				context.output(context.element().toPrettyString());
-			}
-		}));
-		
-		return collection;
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -289,18 +268,20 @@ public class BasicTest7 {
 		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","pci_prospectcall");
 		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "CMPGN");
 		
-		PCollection<String> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
+		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
 				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
 				"A_", "B_", "C_", "D_");
 		
 		
-//		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		rowPCollection.apply(ParDo.named("Filter").of(new FilterData()))
+				.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 
-		rowPCollection//.apply(ParDo.named("Filter").of(new FilteringData()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+//		rowPCollection.apply(ParDo.named("Filter").of(new FilterData()))
+////				.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}

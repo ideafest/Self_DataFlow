@@ -125,15 +125,16 @@ public class Join1 {
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		
-		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "PC_PCI");
+		setTheTableSchema(fieldSchemaList, "A_","Learning", "PCI_Temp");
 		setTheTableSchema(fieldSchemaList, "B_","Xtaas","master_status");
 		
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","PC_PCI");
+		List<Field> fieldMetaDataList1 = getThemFields("Learning","PCI_Temp");
 		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","master_status");
 		
-		PCollection<TableRow> sourceTable1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(queries.PC_PCI));
+//		PCollection<TableRow> sourceTable1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(queries.PC_PCI));
+		PCollection<TableRow> sourceTable1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from("vantage-167009:Learning.PCI_Temp"));
 		PCollection<TableRow> sourceTable2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status));
 		
 		PCollection<TableRow> resultPCollection = combineTableDetails(sourceTable1, sourceTable2,
