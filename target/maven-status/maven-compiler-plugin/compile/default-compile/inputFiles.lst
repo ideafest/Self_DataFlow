@@ -8,6 +8,7 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQuerySnippets.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest5.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideFilter.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Joins/Join6.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryTornadoes_v2.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BQThings.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest1.java
@@ -19,8 +20,10 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/LocalWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/NewTestClass.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportFromBQ.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/NewIdea.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Joins/Join1.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/DebuggingWordCount.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Joins/Join4.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WindowedWordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/PerformOperations.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/Queries.java
@@ -29,9 +32,11 @@
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/WordCount.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest6.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/Something/GottaTestThis.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest7New.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/BigQueryRandom.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/ExportAsCSV.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/common/PubsubFileInjector.java
+/home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/BasicTest8.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/PJoin_v1.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/example/SideViewTrial.java
 /home/zimetrics/Documents/first-dataflow/src/main/java/com/Practice/Basic/ReallyBasic.java

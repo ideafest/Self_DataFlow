@@ -70,8 +70,8 @@ public class BasicTest7New {
 			TableRow tableRow = new TableRow();
 			
 			tableRow.set("_id", element.get("A__id"));
-			tableRow.set("campaignId", element.get("C_campaignid"));
-			tableRow.set("agentId", element.get("C_agentid"));
+			tableRow.set("campaignId", element.get("C_campaignId"));
+			tableRow.set("agentId", element.get("C_agentId"));
 			tableRow.set("sectionName", element.get("A_sectionName"));
 			tableRow.set("feedback", element.get("B_feedback"));
 			
@@ -267,21 +267,21 @@ public class BasicTest7New {
 		
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
+		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
+		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
+		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
+		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
 		
-		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("sectionName").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("feedback").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("sectionName").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("feedback").setType("STRING"));
 		
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		rowPCollection3.apply(ParDo.named("Filter").of(new Filter()))
-				.apply(ParDo.of(new FinalFieldTableRow()))
+				//.apply(ParDo.of(new FinalFieldTableRow()))
 				.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 						.withSchema(tableSchema)
 						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
