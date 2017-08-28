@@ -14,6 +14,11 @@ import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.common.collect.Iterators;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class NewTest {
 
@@ -27,8 +32,9 @@ public class NewTest {
 			String campaignId = (String) element.get("campaignId");
 			String agentId = (String) element.get("agentId");
 			String sectionName = (String) element.get("sectionName");
+			String feedback = (String) element.get("feedback");
 			
-			String finalKey = id + campaignId + agentId + sectionName;
+			String finalKey = id + campaignId + agentId + sectionName + feedback;
 			context.output(KV.of(finalKey, element));
 			
 		}
@@ -42,9 +48,8 @@ public class NewTest {
 			String campaignId = (String) element.get("campaignId");
 			String agentId = (String) element.get("agentId");
 			String sectionName = (String) element.get("sectionName");
-			String feedback = (String) element.get("feedback");
 			
-			String finalKey = id + campaignId + agentId + sectionName + feedback;
+			String finalKey = id + campaignId + agentId + sectionName;
 			context.output(KV.of(finalKey, element));
 			
 		}
@@ -106,6 +111,7 @@ public class NewTest {
 							naCount = 0;
 						}
 						element.remove("COUNT");
+						element.remove("feedback");
 						element.set("yes_count", yesCount);
 						element.set("no_count", noCount);
 						element.set("na_count", naCount);
@@ -124,8 +130,27 @@ public class NewTest {
 						KV<String, Iterable<TableRow>> element = context.element();
 						Iterable<TableRow> rowIterable = element.getValue();
 						TableRow tableRow = rowIterable.iterator().next();
-
 						
+						tableRow.set("yesc", 0);
+						tableRow.set("noc", 0);
+						tableRow.set("nac", 0);
+						
+						for(TableRow tableRow1 : rowIterable){
+							if((int)tableRow1.get("yes_count") != 0){
+								tableRow.replace("yesc", tableRow.get("yesc"), tableRow1.get("yes_count"));
+							}
+							if((int)tableRow1.get("no_count") != 0){
+								tableRow.replace("noc", tableRow.get("noc"), tableRow1.get("no_count"));
+							}
+							if((int)tableRow1.get("na_count") != 0){
+								tableRow.replace("nac", tableRow.get("nac"), tableRow1.get("na_count"));
+							}
+						}
+						tableRow.remove("yes_count");
+						tableRow.remove("no_count");
+						tableRow.remove("na_count");
+						
+						context.output(tableRow);
 					}
 				}));
 		
@@ -157,6 +182,16 @@ public class NewTest {
 		
 		pipeline.run();
 		
+	}
+	
+	@Test
+	public void test1(){
+		List<Integer> integers = new ArrayList<>();
+		integers.add(2);
+		Iterator<Integer> iterators = integers.iterator();
+		if (iterators.hasNext()){
+			System.out.println(iterators.next());
+		}
 	}
 
 }
