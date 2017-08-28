@@ -50,6 +50,7 @@ com/Practice/Joins/Join1.class
 com/Practice/Basic/BasicTest7New$ReadFromJoinResult2.class
 com/Practice/Basic/BasicTest3$ReadFromTable2.class
 com/Practice/Basic/BetterReallyBasic$ReadFromTable1.class
+com/Practice/Basic/NewTest$3.class
 com/Practice/Basic/BasicTest1$1.class
 com/example/SideView_v2.class
 com/Practice/Basic/BasicTest8$ReadFromJoin1.class
@@ -222,6 +223,7 @@ com/example/BigQueryTornadoes_v2$Options.class
 com/Practice/Joins/Join6$ReadFromJoin1.class
 com/Practice/Basic/Queries.class
 com/example/DebuggingWordCount$WordCountOptions.class
+com/Practice/Basic/NewTest$Select1.class
 BQuery_v2$Options.class
 com/Practice/Basic/BasicTest7$2.class
 com/Practice/Basic/BasicTest2$1.class

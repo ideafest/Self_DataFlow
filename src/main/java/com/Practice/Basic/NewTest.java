@@ -94,17 +94,14 @@ public class NewTest {
 						
 						if(feedback.equals("YES")){
 							yesCount = (Integer) element.get("COUNT");
-						}else{
+						}else {
 							yesCount = 0;
 						}
-						
 						if(feedback.equals("NO")){
 							noCount = (Integer) element.get("COUNT");
-						}else{
+						}else {
 							noCount = 0;
 						}
-						
-						
 						if(feedback.equals("NA")){
 							naCount = (Integer) element.get("COUNT");
 						}else{
@@ -146,16 +143,48 @@ public class NewTest {
 								tableRow.replace("nac", tableRow.get("nac"), tableRow1.get("na_count"));
 							}
 						}
+						
+						int yesc = (int) tableRow.get("yesc");
+						int noc = (int) tableRow.get("noc");
+						int nac = (int) tableRow.get("nac");
+						int total = yesc + noc + nac;
+						float avg_percent;
+						if((total - nac) < 1){
+							avg_percent = 1;
+						}
+						else{
+							avg_percent = (float) ((yesc * 1.00) / (total - nac));
+						}
+						
+						tableRow.set("avg_percent", avg_percent);
+						
 						tableRow.remove("yes_count");
 						tableRow.remove("no_count");
 						tableRow.remove("na_count");
+						tableRow.remove("yesc");
+						tableRow.remove("noc");
+						tableRow.remove("nac");
 						
 						context.output(tableRow);
 					}
 				}));
 		
-		
-		
+//		PCollection<TableRow> resultPCollection3 = resultPCollection2
+//				.apply(ParDo.named("Meh").of(new DoFn<TableRow, TableRow>() {
+//					@Override
+//					public void processElement(ProcessContext context) throws Exception {
+//						TableRow element = context.element();
+//
+//						int yesc = (int) element.get("yesc");
+//						int noc = (int) element.get("noc");
+//						int nac = (int) element.get("nac");
+//						int total = yesc + noc + nac;
+//
+//						element.set("total", total);
+//						context.output(element);
+//					}
+//				}));
+
 		return resultPCollection2;
 	}
 	
