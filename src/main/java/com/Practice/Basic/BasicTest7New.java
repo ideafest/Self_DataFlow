@@ -10,11 +10,13 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
@@ -22,6 +24,7 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
+import com.google.common.collect.Iterators;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,23 +65,7 @@ public class BasicTest7New {
 		}
 	}
 	
-	private static class FinalFieldTableRow extends DoFn<TableRow, TableRow> {
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			
-			TableRow element = context.element();
-			TableRow tableRow = new TableRow();
-			
-			tableRow.set("_id", element.get("A__id"));
-			tableRow.set("campaignId", element.get("C_campaignId"));
-			tableRow.set("agentId", element.get("C_agentId"));
-			tableRow.set("sectionName", element.get("A_sectionName"));
-			tableRow.set("feedback", element.get("B_feedback"));
-			
-			context.output(tableRow);
-		}
-	}
-	
+
 	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -130,6 +117,72 @@ public class BasicTest7New {
 			}
 		}
 	}
+	
+	private static class ConvertToString extends DoFn<TableRow, String> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			
+			context.output(context.element().toPrettyString());
+			
+		}
+	}
+	
+	
+	private static class FinalFieldTableRow extends DoFn<TableRow, TableRow> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			
+			TableRow element = context.element();
+			TableRow tableRow = new TableRow();
+			
+			tableRow.set("_id", element.get("A__id"));
+			tableRow.set("campaignId", element.get("C_campaignId"));
+			tableRow.set("agentId", element.get("C_agentId"));
+			tableRow.set("sectionName", element.get("A_sectionName"));
+			tableRow.set("feedback", element.get("B_feedback"));
+			
+			context.output(tableRow);
+		}
+	}
+	
+	private static class Select extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String id = (String) element.get("_id");
+			String campaignId = (String) element.get("campaignId");
+			String agentId = (String) element.get("agentId");
+			String sectionName = (String) element.get("sectionName");
+			String feedback = (String) element.get("feedback");
+			
+			String finalKey = id + campaignId + agentId + sectionName + feedback;
+			context.output(KV.of(finalKey, element));
+		
+		}
+	}
+	
+	static PCollection<TableRow> groupBy (PCollection<TableRow> filteredRow){
+		
+		PCollection<KV<String, TableRow>> currentRow = filteredRow.apply(ParDo.of(new Select()));
+		
+		PCollection<KV<String, Iterable<TableRow>>> groupedBy = currentRow.apply(GroupByKey.create());
+		
+		PCollection<TableRow> resultPCollection = groupedBy.apply(ParDo.of(new DoFn<KV<String, Iterable<TableRow>>, TableRow>() {
+			@Override
+			public void processElement(ProcessContext context) throws Exception {
+				KV<String, Iterable<TableRow>> element = context.element();
+				Iterable<TableRow> rowIterable = element.getValue();
+				int size = Iterators.size(rowIterable.iterator());
+				TableRow tableRow = rowIterable.iterator().next();
+				tableRow.set("COUNT", size);
+				context.output(tableRow);
+			}
+		}));
+		
+		
+		return resultPCollection;
+	}
+	
 	
 	static PCollection<TableRow> combineTableDetails(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
 			, List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, String table1Prefix, String table2Prefix){
@@ -266,31 +319,36 @@ public class BasicTest7New {
 				fieldMetaDataList4, "D_");
 		
 		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
-		
+//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+////		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
+////		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
+////		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
+////		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
+//
 //		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
 //		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
 //		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
 //		fieldSchemaList.add(new TableFieldSchema().setName("sectionName").setType("STRING"));
 //		fieldSchemaList.add(new TableFieldSchema().setName("feedback").setType("STRING"));
+//		fieldSchemaList.add(new TableFieldSchema().setName("COUNT").setType("INTEGER"));
+//
+//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+//
+//		rowPCollection3.apply(ParDo.named("Filter").of(new Filter()))
+//				.apply(ParDo.of(new FinalFieldTableRow()))
+//				.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+//				.withSchema(tableSchema)
+//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
-		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		rowPCollection3.apply(ParDo.named("Filter").of(new Filter()))
-				//.apply(ParDo.of(new FinalFieldTableRow()))
-				.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-						.withSchema(tableSchema)
-						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		PCollection<TableRow> itsAPCollection = rowPCollection3.apply(ParDo.of(new Filter()))
+				.apply(ParDo.of(new FinalFieldTableRow()));
 		
+		PCollection<TableRow> pCollection = groupBy(itsAPCollection);
 		
-//		rowPCollection3//.apply(ParDo.of(new Filter()))
-//				.apply(ParDo.of(new ConvertToString()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+		pCollection.apply(ParDo.of(new ConvertToString()))
+				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}
