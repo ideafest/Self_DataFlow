@@ -55,6 +55,20 @@ public class NewTest {
 		}
 	}
 	
+	private static class Select2 extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String id = (String) element.get("_id");
+			String campaignId = (String) element.get("campaignId");
+			String agentId = (String) element.get("agentId");
+			
+			String finalKey = id + campaignId + agentId;
+			context.output(KV.of(finalKey, element));
+			
+		}
+	}
+	
 	
 	private static class ConvertToString extends DoFn<TableRow, String> {
 		@Override
@@ -63,7 +77,7 @@ public class NewTest {
 		}
 	}
 	
-	static PCollection<TableRow> groupBy (PCollection<KV<String, TableRow>> currentRow){
+	static PCollection<TableRow> operations(PCollection<KV<String, TableRow>> currentRow){
 		
 //		PCollection<KV<String, TableRow>> currentRow = filteredRow.apply(ParDo.of(new Select()));
 		
@@ -150,13 +164,51 @@ public class NewTest {
 						int total = yesc + noc + nac;
 						float avg_percent;
 						if((total - nac) < 1){
-							avg_percent = 1;
+							avg_percent = 1.0f;
 						}
 						else{
 							avg_percent = (float) ((yesc * 1.00) / (total - nac));
 						}
 						
-						tableRow.set("avg_percent", avg_percent);
+						String sectionName = (String) tableRow.get("sectionName");
+						
+						if(sectionName.equals("Call Closing")){
+							tableRow.set("CallClosing", avg_percent);
+						}
+						else{
+							tableRow.set("CallClosing", 0.0f);
+						}
+						if(sectionName.equals("Salesmanship")){
+							tableRow.set("Salesmanship", avg_percent);
+						}
+						else{
+							tableRow.set("Salesmanship", 0.0f);
+						}
+						if(sectionName.equals("Client Offer & Send")){
+							tableRow.set("ClientOfferAndSend", avg_percent);
+						}
+						else{
+							tableRow.set("ClientOfferAndSend", 0.0f);
+						}
+						if(sectionName.equals("Introduction")){
+							tableRow.set("Introduction", avg_percent);
+						}
+						else{
+							tableRow.set("Introduction", 0.0f);
+						}
+						if(sectionName.equals("Phone Etiquette")){
+							tableRow.set("PhoneEtiquette", avg_percent);
+						}
+						else{
+							tableRow.set("PhoneEtiquette", 0.0f);
+						}
+						if(sectionName.equals("Lead Validation")){
+							tableRow.set("LeadValidation", avg_percent);
+						}
+						else{
+							tableRow.set("LeadValidation", 0.0f);
+						}
+						
 						
 						tableRow.remove("yes_count");
 						tableRow.remove("no_count");
@@ -164,28 +216,65 @@ public class NewTest {
 						tableRow.remove("yesc");
 						tableRow.remove("noc");
 						tableRow.remove("nac");
+						tableRow.remove("sectionName");
 						
 						context.output(tableRow);
 					}
 				}));
 		
-//		PCollection<TableRow> resultPCollection3 = resultPCollection2
-//				.apply(ParDo.named("Meh").of(new DoFn<TableRow, TableRow>() {
-//					@Override
-//					public void processElement(ProcessContext context) throws Exception {
-//						TableRow element = context.element();
-//
-//						int yesc = (int) element.get("yesc");
-//						int noc = (int) element.get("noc");
-//						int nac = (int) element.get("nac");
-//						int total = yesc + noc + nac;
-//
-//						element.set("total", total);
-//						context.output(element);
-//					}
-//				}));
+		PCollection<KV<String, TableRow>> pCollection2 = resultPCollection2.apply(ParDo.named("Select2").of(new Select2()));
 
-		return resultPCollection2;
+		PCollection<KV<String, Iterable<TableRow>>> groupedBy3 = pCollection2.apply(GroupByKey.create());
+
+		PCollection<TableRow> resultPCollection3 = groupedBy3
+				.apply(ParDo.named("Meh_V3").of(new DoFn<KV<String, Iterable<TableRow>>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, Iterable<TableRow>> element = context.element();
+						Iterable<TableRow> rowIterable = element.getValue();
+						TableRow row = rowIterable.iterator().next();
+						
+						double maxClientOfferAndSend = 0.0d,
+								maxSalesmanship = 0.0d,
+								maxCallClosing = 0.0d,
+								maxIntroduction = 0.0d,
+								maxPhoneEtiquette = 0.0d,
+								maxLeadValidation = 0.0d;
+						
+						for(TableRow tableRow : rowIterable){
+							if((double)tableRow.get("CallClosing") > maxCallClosing){
+								maxCallClosing = (double)tableRow.get("CallClosing");
+							}
+							if((double)tableRow.get("Salesmanship") > maxSalesmanship){
+								maxSalesmanship = (double)tableRow.get("Salesmanship");
+							}
+							if((double)tableRow.get("ClientOfferAndSend") > maxClientOfferAndSend){
+								maxClientOfferAndSend = (double) tableRow.get("ClientOfferAndSend");
+							}
+							if((double)tableRow.get("Introduction") > maxIntroduction){
+								maxIntroduction = (double)tableRow.get("Introduction");
+							}
+							if((double)tableRow.get("PhoneEtiquette") > maxPhoneEtiquette){
+								maxPhoneEtiquette = (double)tableRow.get("PhoneEtiquette");
+							}
+							if((double)tableRow.get("LeadValidation") > maxLeadValidation){
+								maxLeadValidation = (double)tableRow.get("LeadValidation");
+							}
+						}
+						
+						row.set("CallClosing", maxCallClosing);
+						row.set("Salesmanship", maxSalesmanship);
+						row.set("ClientOfferAndSend", maxClientOfferAndSend);
+						row.set("Introduction", maxIntroduction);
+						row.set("PhoneEtiquette", maxPhoneEtiquette);
+						row.set("LeadValidation", maxLeadValidation);
+						
+						context.output(row);
+					}
+				}));
+		
+		
+		return resultPCollection3;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -205,7 +294,7 @@ public class NewTest {
 				.apply(ParDo.named("FormatData1").of(new Select()));
 		
 		
-		PCollection<TableRow> rowPCollection = groupBy(source1Table);
+		PCollection<TableRow> rowPCollection = operations(source1Table);
 		rowPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
