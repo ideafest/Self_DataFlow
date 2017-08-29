@@ -10,6 +10,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
@@ -28,9 +29,6 @@ import java.util.List;
 
 public class BasicTest8 {
 	
-	
-	private static List<Field> fieldTrackerList = new ArrayList<>();
-	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
 		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
@@ -47,14 +45,14 @@ public class BasicTest8 {
 		}
 	}
 	
-//	private static class ConvertToString extends DoFn<TableRow, String> {
-//		@Override
-//		public void processElement(ProcessContext context) throws Exception {
-//
-//			context.output(context.element().toPrettyString());
-//
-//		}
-//	}
+	private static class ConvertToString extends DoFn<TableRow, String> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+
+			context.output(context.element().toPrettyString());
+
+		}
+	}
 	
 	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -65,20 +63,53 @@ public class BasicTest8 {
 		}
 	}
 	
-	private static class ReadFromJoin1 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ReadFromTable2 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("B__id");
+			String id = (String) tableRow.get("_id");
 			context.output(KV.of(id, tableRow));
 		}
 	}
+
 	
 	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
+			String id = (String) tableRow.get("attribute");
+			if(id == null){
+				context.output(KV.of("null", tableRow));
+			}else{
+				context.output(KV.of(id, tableRow));
+			}
+			
+		}
+	}
+	
+	private static class ReadFromTable4 extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow tableRow = context.element();
 			String id = (String) tableRow.get("_id");
+			context.output(KV.of(id, tableRow));
+		}
+	}
+	private static class ReadFromTable5 extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow tableRow = context.element();
+			String id = (String) tableRow.get("_id");
+			context.output(KV.of(id, tableRow));
+		}
+	}
+	
+	
+	private static class ReadFromJoin1 extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow tableRow = context.element();
+			String id = (String) tableRow.get("B__id");
 			context.output(KV.of(id, tableRow));
 		}
 	}
@@ -92,33 +123,69 @@ public class BasicTest8 {
 		}
 	}
 	
-	private static class ReadFromTable4 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ReadFromJoin3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("attribute");
+			String id = (String) tableRow.get("A__id");
 			context.output(KV.of(id, tableRow));
 		}
 	}
 	
-	static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
-			, PCollection<TableRow> stringPCollection3, PCollection<TableRow> stringPCollection4,
-			                                         List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
-			                                         String table1Prefix, String table2Prefix, String table3Prefix, String table4Prefix){
-		
-		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
-		PCollection<KV<String, TableRow>> kvpCollection2 = stringPCollection2.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+	private static class ReadFromJoin4 extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow tableRow = context.element();
+			String id = (String) tableRow.get("C_campaignId");
+			context.output(KV.of(id, tableRow));
+		}
+	}
+	
+	
+	private static class FinalFieldTableRow extends DoFn<TableRow, TableRow> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			
+			TableRow element = context.element();
+			TableRow tableRow = new TableRow();
+			
+			tableRow.set("_id", element.get("A__id"));
+			tableRow.set("campaignId", element.get("C_campaignId"));
+			tableRow.set("agentId", element.get("C_agentId"));
+			tableRow.set("prospectCallId", element.get("C_prospectcallid"));
+			tableRow.set("prospectInteractionSessionId", element.get("C_prospectinteractionsessionid"));
+			tableRow.set("callStartTime", element.get("C_callstarttime"));
+			tableRow.set("status", element.get("C_status"));
+			tableRow.set("dispositionStatus", element.get("C_dispositionstatus"));
+			tableRow.set("subStatus", element.get("C_substatus"));
+			tableRow.set("qaId", element.get("E_qaId"));
+			tableRow.set("overallScore", element.get("E_overallScore"));
+			tableRow.set("qaComments", element.get("E_qaComments"));
+			tableRow.set("feedbackTime", element.get("E_feedbackTime"));
+			tableRow.set("sectionName", element.get("A_sectionName"));
+			tableRow.set("attribute", element.get("D_attribute"));
+			tableRow.set("attributeComment", element.get("B_attributeComment"));
+			tableRow.set("label", element.get("D_label"));
+			tableRow.set("feedback", element.get("B_feedback"));
+			
+			context.output(tableRow);
+		}
+	}
+	
+	
+	static PCollection<TableRow> combineTableDetails(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
+			, List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2, String table1Prefix, String table2Prefix){
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
 		
 		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, kvpCollection1)
-				.and(tupleTag2, kvpCollection2)
+				.of(tupleTag1, stringPCollection1)
+				.and(tupleTag2, stringPCollection2)
 				.apply(CoGroupByKey.create());
 		
 		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named("Result1").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -135,12 +202,10 @@ public class BasicTest8 {
 								
 								for(Field field: fieldMetaDataList1){
 									tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
-									fieldTrackerList.add(Field.of(table1Prefix + field.getName(), field.getType()));
 								}
 								
 								for(Field field : fieldMetaDataList2){
 									tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
-									fieldTrackerList.add(Field.of(table2Prefix + field.getName(), field.getType()));
 								}
 								context.output(tableRow);
 							}
@@ -148,94 +213,136 @@ public class BasicTest8 {
 					}
 				}));
 		
-		PCollection<KV<String, TableRow>> kvpCollection3 = resultPCollection.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
-		PCollection<KV<String, TableRow>> kvpCollection4 = stringPCollection3.apply(ParDo.named("FormatData4").of(new ReadFromTable3()));
 		
-		final TupleTag<TableRow> tupleTag3 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag4 = new TupleTag<>();
+		return resultPCollection;
+	}
+	
+	static PCollection<TableRow> combineTableDetails2(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
+			,List<Field> fieldMetaDataList2, String table2Prefix){
 		
-		PCollection<KV<String, CoGbkResult>> pCollection2 = KeyedPCollectionTuple
-				.of(tupleTag3, kvpCollection3)
-				.and(tupleTag4, kvpCollection4)
+		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
+				.of(tupleTag1, stringPCollection1)
+				.and(tupleTag2, stringPCollection2)
 				.apply(CoGroupByKey.create());
 		
-		
-		PCollection<TableRow> resultPCollection2 = pCollection2.apply(ParDo.named("Process2")
-				.of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+		PCollection<TableRow> resultPCollection = pCollection
+				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
-						
 						KV<String, CoGbkResult> element = context.element();
 						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag3);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag4);
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
 						
-						TableRow tableRow;
 						for(TableRow tableRow1 : rowIterable1){
 							
 							for(TableRow tableRow2 : rowIterable2){
 								
-								tableRow = new TableRow();
-								
-								for(Field field : fieldTrackerList){
-									tableRow.set(field.getName(), tableRow1.get(field.getName()));
+								for(Field field : fieldMetaDataList2){
+									tableRow1.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
 								}
-								
-								for(Field field : fieldMetaDataList3){
-									tableRow.set(table3Prefix + field.getName(), tableRow2.get(field.getName()));
-									fieldTrackerList.add(Field.of(table3Prefix + field.getName(), field.getType()));
-								}
-								context.output(tableRow);
-								
+								context.output(tableRow1);
 							}
-							
 						}
 					}
 				}));
 		
-		PCollection<KV<String, TableRow>> kvpCollection5 = resultPCollection2.apply(ParDo.named("FormatData5").of(new ReadFromJoin2()));
-		PCollection<KV<String, TableRow>> kvpCollection6 = stringPCollection4.apply(ParDo.named("FormatData6").of(new ReadFromTable4()));
 		
-		final TupleTag<TableRow> tupleTag5 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag6 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection3 = KeyedPCollectionTuple
-				.of(tupleTag5, kvpCollection5)
-				.and(tupleTag6, kvpCollection6)
-				.apply(CoGroupByKey.create());
-		
-		PCollection<TableRow> resultPCollection3 = pCollection3.apply(ParDo.named("Process3")
-				.of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+		return resultPCollection;
+	}
+	
+	private PCollection<TableRow> operations(PCollection<TableRow> rowPCollection){
+		PCollection<TableRow> firstResult = rowPCollection
+				.apply(ParDo.named("Meh_v1").of(new DoFn<TableRow, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag5);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag6);
-						
-						TableRow tableRow;
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
+						TableRow element = context.element();
+						String feedback = (String) element.get("feedback");
+						String attribute = (String) element.get("attribute");
+						switch (attribute){
+							case "PHONEETIQUETTE_CUSTOMER_ENGAGEMENT":
+								element.set("PhoneEtiquette_Customer_Engagement", feedback);
+								break;
+							case "PHONEETIQUETTE_PROFESSIONALISM":
+								element.set("PhoneEtiquette_Professionalism", feedback);
+								break;
+							case "SALESMANSHIP_REBUTTAL_USE":
+								element.set("Salesmanship_Rebuttal_Use", feedback);
+								break;
+							case "SALESMANSHIP_PROVIDE_INFORMATION":
+								element.set("Salesmanship_Provide_Information", feedback);
+								break;
+							case "INTRODUCTION_BRANDING_PERSONAL_CORPORATE":
+								element.set("Introduction_Branding_Personal_Corporate", feedback);
+								break;
+							case "INTRODUCTION_MARKETING_EFFORTS":
+								element.set("Introduction_Marketing_Efforts", feedback);
+								break;
+							case "CUSTOMERSATISFACTION_OVERALL_SERVICE":
+								element.set("CustomerSatisfaction_Overall_Service", feedback);
+								break;
+							case "CLIENT_FULL_DETAILS":
+								element.set("Client_Full_Details", feedback);
+								break;
+							case "CLIENT_PII":
+								element.set("Client_PII", feedback);
+								break;
+							case "CALLCLOSING_BRANDING_PERSONAL_CORPORATE":
+								element.set("CallClosing_Branding_Personal_Corporate", feedback);
+								break;
+							case "PHONEETIQUETTE_CALL_PACING":
+								element.set("PhoneEtiquette_Call_Pacing", feedback);
+								break;
+							case "PHONEETIQUETTE_CALL_HOLD_PURPOSE":
+								element.set("PhoneEtiquette_Call_Hold_Purpose", feedback);
+								break;
+							case "SALESMANSHIP_PRE-QUALIFICATION_QUESTIONS":
+								element.set("Salesmanship_Pre-Qualification_Questions", feedback);
+								break;
+							case "INTRODUCTION_PREPARE_READY":
+								element.set("Introduction_Prepare_Ready", feedback);
+								break;
+							case "INTRODUCTION_CALL_RECORD":
+								element.set("Introduction_Call_Record", feedback);
+								break;
+							case "CUSTOMERSATISFACTION_REPRESENTATIVE_ON_CALL":
+								element.set("CustomerSatisfaction_Representative_On_Call", feedback);
+								break;
+							case "CLIENT_POST-QUALIFICATION QUESTIONS":
+								element.set("Client_Post-Qualification_Questions", feedback);
+								break;
+							case "CLIENT_OBTAIN_CUSTOMER_CONSENT":
+								element.set("Client_Otain_Customer_Consent", feedback);
+								break;
+							case "CALLCLOSING_EXPECTATION_SETTING":
+								element.set("CallClosing_Expectation_Setting", feedback);
+								break;
+							case "CALLCLOSING_REDIAL_NUMBER":
+								element.set("CallClosing_Redial_Number", feedback);
+								break;
+							case "LEAD_VALIDATION_VALID":
+								element.set("Lead_Validation_Valid", feedback);
+								break;
+//							??Get this one checked
+//                          case "LEAD_VALIDATION_NOTES":
+//								element.set("Lead_Validation_Notes", element.get("attributeComment"));
+//								break;
 								
-								tableRow = new TableRow();
-								
-								for(Field field : fieldTrackerList){
-									tableRow.set(field.getName(), tableRow1.get(field.getName()));
-								}
-								
-								for(Field field : fieldMetaDataList4){
-									tableRow.set(table4Prefix + field.getName(), tableRow2.get(field.getName()));
-									fieldTrackerList.add(Field.of(table4Prefix + field.getName(), field.getType()));
-								}
-								context.output(tableRow);
-							}
 						}
+						
+						element.remove("feedback");
+						element.remove("attribute");
+						element.remove("attributeComment");
+						
+						context.output(element);
+						
 					}
 				}));
-		
-		return resultPCollection3;
+		return firstResult;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -250,35 +357,87 @@ public class BasicTest8 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		PCollection<TableRow> source1Table = pipeline.apply(BigQueryIO.Read.named("Source1Reader").from(queries.pciFeedbackResponseList));
-		PCollection<TableRow> source2Table = pipeline.apply(BigQueryIO.Read.named("Source2Reader").from(queries.pciResponseAttributes));
-		PCollection<TableRow> source3Table = pipeline.apply(BigQueryIO.Read.named("Source3Reader").fromQuery(queries.PC_PCI));
-		PCollection<TableRow> source4Table = pipeline.apply(BigQueryIO.Read.named("Source4Reader").from(queries.qaFeedbackFormAttributes));
+		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
+		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
+		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","PC_PCI");
+		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "qafeedbackformattributes");
+		List<Field> fieldMetaDataList5 = getThemFields("Xtaas", "pci_qafeedback");
+		List<Field> fieldMetaDataList6 = getThemFields("Xtaas", "CMPGN");
+		
+		//pci_feedbackresponselist(A) with pci_responseattributes(B) {A._id = B._id & A.INDEX = B.index}
+		PCollection<KV<String, TableRow>> source1Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader1").from(queries.pciFeedbackResponseList))
+				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+		
+		PCollection<KV<String, TableRow>> source2Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader2").from(queries.pciResponseAttributes))
+				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+		
+		PCollection<TableRow> joinResult1 = combineTableDetails(source1Table, source2Table,
+				fieldMetaDataList1, fieldMetaDataList2, "A_", "B_");
+		
+		//with PC_PCI(P) {B._id = P._id}
+		PCollection<KV<String, TableRow>> source3Table = joinResult1
+				.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
+		
+		PCollection<KV<String, TableRow>> source4Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader4").from("vantage-167009:Learning.PCI_Temp"))
+				.apply(ParDo.named("FormatData4").of(new ReadFromTable2()));
+		
+		PCollection<TableRow> joinResult2 = combineTableDetails2(source3Table, source4Table,
+				fieldMetaDataList3, "C_");
+		
+		//with qafeedbackformattributes(E) {B.attribute = E.attribute}
+		PCollection<KV<String, TableRow>> source5Table = joinResult2
+				.apply(ParDo.named("FormatData5").of(new ReadFromJoin2()));
+		
+		PCollection<KV<String, TableRow>> source6Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader6").from(queries.qaFeedbackFormAttributes))
+				.apply(ParDo.named("FormatData6").of(new ReadFromTable3()));
+		
+		PCollection<TableRow> joinResult3 = combineTableDetails2(source5Table, source6Table,
+				fieldMetaDataList4, "D_");
+		
+		//with pci_qafeedback(F) {A._id = F._id}
+		PCollection<KV<String, TableRow>> source7Table = joinResult3
+				.apply(ParDo.named("FormatData7").of(new ReadFromJoin3()));
+		
+		PCollection<KV<String, TableRow>> source8Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader8").from(queries.pciQaFeedback))
+				.apply(ParDo.named("FormatData8").of(new ReadFromTable4()));
+		
+		PCollection<TableRow> joinResult4 = combineTableDetails2(source7Table, source8Table,
+				fieldMetaDataList5, "E_");
+		
+		//with CMPGN(G) {P.campaignid = G._id}
+		PCollection<KV<String, TableRow>> source9Table = joinResult4
+				.apply(ParDo.named("FormatData9").of(new ReadFromJoin4()));
+		
+		PCollection<KV<String, TableRow>> source10Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader10").fromQuery(queries.CMPGN))
+				.apply(ParDo.named("FormatData10").of(new ReadFromTable5()));
+		
+		PCollection<TableRow> finalResult = combineTableDetails2(source9Table, source10Table,
+				fieldMetaDataList6, "F_");
 		
 		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
 		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
 		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
 		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "PC_PCI");
 		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "qafeedbackformattributes");
+		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "pci_qafeedback");
+		setTheTableSchema(fieldSchemaList, "F_","Xtaas", "CMPGN");
 		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
-		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
-		List<Field> fieldMetaDataList3 = getThemFields("Xtaas","PC_PCI");
-		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "qafeedbackformattributes");
 		
-		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, source3Table, source4Table,
-				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
-				"A_", "B_", "C_", "D_");
-		
-		
-		rowPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-				.withSchema(tableSchema)
-				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+//		finalResult.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+//				.withSchema(tableSchema)
+//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 
-//		source1Table.apply(ParDo.named("Filter").of(new FilteringData()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+		finalResult.apply(ParDo.named("Where").of(new FinalFieldTableRow()))
+				.apply(ParDo.of(new ConvertToString()))
+				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}

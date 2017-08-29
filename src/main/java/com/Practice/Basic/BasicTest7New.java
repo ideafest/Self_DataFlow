@@ -525,36 +525,40 @@ public class BasicTest7New {
 				fieldMetaDataList4, "D_");
 		
 		
-//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-////		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-////		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-////		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-////		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
-//
-//		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("sectionName").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("feedback").setType("STRING"));
-//		fieldSchemaList.add(new TableFieldSchema().setName("COUNT").setType("INTEGER"));
-//
-//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-//
-//		rowPCollection3.apply(ParDo.named("Filter").of(new Filter()))
-//				.apply(ParDo.of(new FinalFieldTableRow()))
-//				.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
-		
+		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
+//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
+//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
+//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
+
+		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
+		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
+		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
+		fieldSchemaList.add(new TableFieldSchema().setName("CallClosing").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("Salesmanship").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("ClientOfferAndSend").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("Introduction").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("PhoneEtiquette").setType("FLOAT"));
+		fieldSchemaList.add(new TableFieldSchema().setName("LeadValidation").setType("FLOAT"));
+
+
+		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		PCollection<TableRow> itsAPCollection = rowPCollection3.apply(ParDo.of(new Filter()))
 				.apply(ParDo.of(new FinalFieldTableRow()));
 		
 		PCollection<TableRow> pCollection = operations(itsAPCollection);
 		
-		pCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+		pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+				.withSchema(tableSchema)
+				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
+		
+		
+
+		
+//		pCollection.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}
