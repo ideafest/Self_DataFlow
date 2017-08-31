@@ -24,19 +24,7 @@ public class Queries {
 			"\n" +
 			"[vantage-167009:Xtaas.prospectcalllog] b ON a._id = b._id;";
 	
-	public final String prospectCallLog = "SELECT a._id _id, a._class _class, a.status status, b.createddate createddate, a.createdby createdby, a.updateddate updateddate, a.updatedby updatedby, a.version version, a.isdeleted isdeleted , a.callbackdate callbackdate, a.isdirty isdirty\n" +
-			"   FROM ( SELECT row_number()\n" +
-			"          OVER( \n" +
-			"          PARTITION BY prospectcallid\n" +
-			"          ORDER BY updateddate) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, updatedby, version, isdeleted, callbackdate, isdirty\n" +
-			"           FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) a\n" +
-			"   JOIN ( SELECT derived_table1.prospectcallid, max(derived_table1.rnum) AS rnum, max(derived_table1.updateddate) AS updateddate, min(derived_table1.createddate) AS createddate\n" +
-			"           FROM ( SELECT row_number()\n" +
-			"                  OVER( \n" +
-			"                  PARTITION BY prospectcallid\n" +
-			"                  ORDER BY updateddate) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, updatedby, version, isdeleted, callbackdate, isdirty\n" +
-			"                   FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) derived_table1\n" +
-			"          GROUP BY derived_table1.prospectcallid) b ON a.prospectcallid = b.prospectcallid AND a.updateddate = b.updateddate AND a.rnum = b.rnum;";
+	public final String prospectCallLog = "vantage-167009:Xtaas.prospectcalllog_new";
 	
 	
 	public final String CMPGN = "SELECT _id,_class,organizationid,campaignmanagerid,\n" +
@@ -68,4 +56,10 @@ public class Queries {
 	public final String source2 = "vantage-167009:Learning.Source2";
 	public final String source3 = "vantage-167009:Learning.Source3";
 	public final String source4 = "vantage-167009:Learning.Source4";
+
+	public final String temp_prospectCallLog = "vantage-167009:Learning.Temp_ProspectCallLog";
+	public final String temp_prospectCall = "vantage-167009:Learning.Temp_ProspectCall";
+	public final String temp_prospect = "vantage-167009:Learning.Temp_Prospect";
+	public final String temp_answers = "vantage-167009:Learning.Temp_Answers";
+	public final String temp_CMPGN = "vantage-167009:Learning.Temp_CMPGN";
 }

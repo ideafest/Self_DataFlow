@@ -16,6 +16,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
@@ -25,6 +26,7 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BasicTest8 {
@@ -45,11 +47,11 @@ public class BasicTest8 {
 		}
 	}
 	
-	private static class ConvertToString extends DoFn<TableRow, String> {
+	private static class ConvertToString extends DoFn<Iterable<TableRow>, String> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 
-			context.output(context.element().toPrettyString());
+			context.output(context.element().toString());
 
 		}
 	}
@@ -141,6 +143,32 @@ public class BasicTest8 {
 		}
 	}
 	
+	private static class Select1 extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			
+			String id = (String) element.get("_id   ");
+			String campaignId = (String) element.get("campaignId");
+			String agentId = (String) element.get("agentId");
+			String prospectCallId = (String) element.get("prospectCallId");
+			String prospectInteractionSessionId = (String) element.get("prospectInteractionSessionId");
+			String callStartTime = (String) element.get("callStartTime");
+			String callDate = (String) element.get("callDate");
+			String dispositionStatus = (String) element.get("dispositionStatus");
+			String subStatus = (String) element.get("subStatus");
+			String qaId = (String) element.get("qaId");
+			String overallScore = (String) element.get("overallScore");
+			String feedbackTime = (String) element.get("feedbackTime");
+			String feedbackDate = (String) element.get("feedbackDate");
+
+			String finalKey = id + campaignId + agentId + prospectCallId + prospectInteractionSessionId
+						+ callStartTime + callDate + dispositionStatus + subStatus + qaId + overallScore
+						+ feedbackTime + feedbackDate;
+			
+			context.output(KV.of(finalKey, element));
+		}
+	}
 	
 	private static class FinalFieldTableRow extends DoFn<TableRow, TableRow> {
 		@Override
@@ -154,7 +182,7 @@ public class BasicTest8 {
 			tableRow.set("agentId", element.get("C_agentId"));
 			tableRow.set("prospectCallId", element.get("C_prospectcallid"));
 			tableRow.set("prospectInteractionSessionId", element.get("C_prospectinteractionsessionid"));
-			tableRow.set("callStartTime", element.get("C_callstarttime"));
+			tableRow.set("callDate", (Date)element.get("C_callstarttime"));
 			tableRow.set("status", element.get("C_status"));
 			tableRow.set("dispositionStatus", element.get("C_dispositionstatus"));
 			tableRow.set("subStatus", element.get("C_substatus"));
@@ -162,6 +190,7 @@ public class BasicTest8 {
 			tableRow.set("overallScore", element.get("E_overallScore"));
 			tableRow.set("qaComments", element.get("E_qaComments"));
 			tableRow.set("feedbackTime", element.get("E_feedbackTime"));
+			tableRow.set("feedbackDate", (Date)element.get("E_feedbackTime"));
 			tableRow.set("sectionName", element.get("A_sectionName"));
 			tableRow.set("attribute", element.get("D_attribute"));
 			tableRow.set("attributeComment", element.get("B_attributeComment"));
@@ -254,7 +283,7 @@ public class BasicTest8 {
 		return resultPCollection;
 	}
 	
-	private PCollection<TableRow> operations(PCollection<TableRow> rowPCollection){
+	private static PCollection<Iterable<TableRow>> operations(PCollection<TableRow> rowPCollection){
 		PCollection<TableRow> firstResult = rowPCollection
 				.apply(ParDo.named("Meh_v1").of(new DoFn<TableRow, TableRow>() {
 					@Override
@@ -342,7 +371,22 @@ public class BasicTest8 {
 						
 					}
 				}));
-		return firstResult;
+		
+		PCollection<KV<String, TableRow>> pCollection1 = firstResult.apply(ParDo.named("Woo").of(new Select1()));
+		
+		PCollection<KV<String, Iterable<TableRow>>> groupResult1 = pCollection1.apply(GroupByKey.create());
+		
+		PCollection<Iterable<TableRow>> iterablePCollection = groupResult1
+				.apply(ParDo.named("Meh_v2").of(new DoFn<KV<String, Iterable<TableRow>>, Iterable<TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, Iterable<TableRow>> element = context.element();
+						Iterable<TableRow> rowIterable = element.getValue();
+						context.output(rowIterable);
+					}
+				}));
+		
+		return iterablePCollection;
 	}
 	
 	interface Options extends PipelineOptions {
@@ -420,23 +464,25 @@ public class BasicTest8 {
 		PCollection<TableRow> finalResult = combineTableDetails2(source9Table, source10Table,
 				fieldMetaDataList6, "F_");
 		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "PC_PCI");
-		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "qafeedbackformattributes");
-		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "pci_qafeedback");
-		setTheTableSchema(fieldSchemaList, "F_","Xtaas", "CMPGN");
-		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-		
-		
+//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
+//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
+//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "PC_PCI");
+//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "qafeedbackformattributes");
+//		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "pci_qafeedback");
+//		setTheTableSchema(fieldSchemaList, "F_","Xtaas", "CMPGN");
+//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+
 //		finalResult.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 //				.withSchema(tableSchema)
 //				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
 //				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 
-		finalResult.apply(ParDo.named("Where").of(new FinalFieldTableRow()))
-				.apply(ParDo.of(new ConvertToString()))
+		PCollection<TableRow> rowPCollection = finalResult.apply(ParDo.of(new FinalFieldTableRow()));
+		
+		PCollection<Iterable<TableRow>> iterablePCollection = operations(rowPCollection);
+		
+		iterablePCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
