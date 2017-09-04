@@ -3,6 +3,7 @@ package com.Practice.Basic;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
+import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
@@ -15,6 +16,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
@@ -22,7 +24,10 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
+import org.junit.Test;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BasicTest9_v2 {
@@ -99,32 +104,221 @@ public class BasicTest9_v2 {
 		}
 	}
 	
+	private static class GroupBy1 extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			
+			String campaignId = (String) element.get("campaignId");
+			String prospectCallId = (String) element.get("prospectCallId");
+			String prospectInteractionSessionId = (String) element.get("prospectInteractionSessionId");
+			String dni = (String) element.get("DNI");
+			String callStartTime = (String) element.get("callStartTime");
+			String callStartDate = (String) element.get("callStartDate");
+			String status = (String) element.get("status");
+			String industryList = (String) element.get("industryList");
+			String dispositionStatus = (String) element.get("dispositionStatus");
+			
+			String finalKey = campaignId + prospectCallId + prospectInteractionSessionId
+					+ dni + callStartTime + callStartDate + status + industryList + dispositionStatus;
+			
+			context.output(KV.of(finalKey, element));
+		}
+	}
+	
 	private static class Filter extends DoFn<TableRow, TableRow>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			
 			TableRow element = context.element();
 			
+			boolean aIsDirty = (boolean) element.get("A_isdirty");
+			boolean aIsDeleted = (boolean) element.get("A_isdeleted");
+			boolean bIsDirty = (boolean) element.get("B_isdirty");
+			boolean bIsDeleted = (boolean) element.get("B_isdeleted");
+			boolean cIsDirty = (boolean) element.get("C_isdirty");
+			boolean cIsDeleted = (boolean) element.get("C_isdeleted");
+			boolean dIsDirty = (boolean) element.get("D_isdirty");
+			boolean dIsDeleted = (boolean) element.get("D_isdeleted");
+			boolean eIsDirty = (boolean) element.get("E_isdirty");
+			boolean eIsDeleted = (boolean) element.get("E_isdeleted");
+			
+			if(!aIsDirty && !aIsDeleted
+					&& !bIsDirty && !bIsDeleted
+					&& !cIsDirty && !cIsDeleted
+					&& !dIsDirty && !dIsDeleted
+					&& !eIsDirty && !eIsDeleted){
+				context.output(element);
+			}
+			
 		}
 	}
 	
+	private static boolean existsIn(String str, String[] strArray){
+		boolean flag = false;
+		for(String s : strArray){
+			if(s.equals(str)){
+				flag = true;
+			}
+		}
+		return flag;
+	}
 	
-	private static class FinalFieldTableRow extends DoFn<TableRow, TableRow> {
+	private static String getString(String str){
+		return str.replaceAll("\"", "");
+	}
+	
+	private static class Select1 extends DoFn<TableRow, TableRow> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			
 			TableRow element = context.element();
 			TableRow tableRow = new TableRow();
 			
-			tableRow.set("_id", element.get("A__id"));
-			tableRow.set("campaignId", element.get("C_campaignId"));
-			tableRow.set("agentId", element.get("C_agentId"));
-			tableRow.set("sectionName", element.get("A_sectionName"));
-			tableRow.set("feedback", element.get("B_feedback"));
+			tableRow.set("campaignId", element.get("B_campaignid"));
+			tableRow.set("prospectCallId", element.get("B_prospectcallid"));
+			tableRow.set("prospectInteractionSessionId", element.get("B_prospectinteractionsessionid"));
+			tableRow.set("DNI", element.get("C_phone"));
+			tableRow.set("callStartTime", element.get("B_callstarttime"));
+			tableRow.set("callStartDate", element.get("B_callstarttime"));
+			tableRow.set("status", (element.get("A_status") == null) ?element.get("A_status") : "null");
+			tableRow.set("dispositionStatus", element.get("B_dispositionstatus"));
+			tableRow.set("industryList", element.get("C_industrylist"));
+			
+			String[] revenueArray = {"\"AnnualRevenue\"","\"What is the Annual Revenue of your Company?\"","\"AnnualRevenue\""};
+			String[] eventTimelineArray = {"\"EventTimeline\"","\"What is your timeline?\"","\"When is your event?\"", "\"EventTimeline\""};
+			String[] industry = {"\"Industry\"", "\"Which Industry you belong to?\"", "\"Which_Industry_you_belong_to_\"", "\"Industry\""};
+			String[] budget = {"\"Budget\"", "\"What is your budget?\"", "\"Budget\""};
+			
+			String answerKey = element.get("D_answerskey") == null ? (String) element.get("D_answerskey") : "null";
+			String answerValue = element.get("D_answersvalue") == null ? (String) element.get("D_answersvalue") : "null";
+			
+			if(existsIn(answerKey, revenueArray)) tableRow.set("Revenue", answerValue); else tableRow.set("Revenue", "null");
+			if(existsIn(answerKey, eventTimelineArray)) tableRow.set("EventTimeline", answerValue); else tableRow.set("EventTimeline", "null");
+			if(existsIn(answerKey, industry)) tableRow.set("Industry", answerValue); else tableRow.set("Industry", "null");
+			if(existsIn(answerKey, budget)) tableRow.set("Budget", answerValue); else tableRow.set("Budget", "null");
+			
+			
+			
+			if(!(answerKey == null)){
+				if(getString(answerKey).equals("CurrentlyEvaluatingCallAnalytics")) tableRow.set("CurrentlyEvaluatingCallAnalytics", answerValue);
+				if(getString(answerKey).equals("Title")) tableRow.set("Title", answerValue);
+				if(getString(answerKey).equals("IsCountryUS")) {
+					tableRow.set("Country", "USA");
+				}
+				else{
+					tableRow.set("Country", "Other");
+				}
+				
+				
+				if(getString(answerKey).equals("Department")) tableRow.set("Department", answerValue);
+				if(getString(answerKey).equals("MarketingDeptYesNo")) {
+					if (getString(answerValue).toLowerCase().equals("yes")) {
+						tableRow.set("Department", "Marketing");
+					} else if (getString(answerValue).toLowerCase().equals("no")) {
+						tableRow.set("Department", "Other");
+					}
+				}
+				
+				if(getString(answerKey).equals("NumberOfEmployeesLessThan50")) {
+					if (getString(answerValue).toLowerCase().equals("yes")) {
+						tableRow.set("NumberOfEmployees", "Less than 50");
+					} else if (getString(answerValue).toLowerCase().equals("no")) {
+						tableRow.set("NumberOfEmployees", "More than 50");
+					}
+				}
+				if(getString(answerKey).equals("NumberOfEmployees")) tableRow.set("NumberOfEmployees", answerValue);
+			}
+			else{
+				tableRow.set("CurrentlyEvaluatingCallAnalytics", "null");
+				tableRow.set("Title", "null");
+				tableRow.set("Country", "null");
+				tableRow.set("Department","null");
+				tableRow.set("Department", "null");
+				tableRow.set("NumberOfEmployees", "null");
+				tableRow.set("NumberOfEmployees", "null"   );
+			}
 			
 			context.output(tableRow);
 		}
 	}
+	
+	private static PCollection<TableRow> operations(PCollection<TableRow> rowPCollection){
+		
+		PCollection<KV<String, TableRow>> kvCollection = rowPCollection.apply(ParDo.of(new GroupBy1()));
+		
+		PCollection<KV<String, Iterable<TableRow>>> groupedColl1 = kvCollection.apply(GroupByKey.create());
+		
+		PCollection<TableRow> pCollection = groupedColl1
+				.apply(ParDo.named("Meh1").of(new DoFn<KV<String, Iterable<TableRow>>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						
+						KV<String, Iterable<TableRow>> element = context.element();
+						Iterable<TableRow> rowIterable = element.getValue();
+						TableRow freshRow = rowIterable.iterator().next();
+						
+						String maxRevenue = "null", maxEventTimeline = "null", maxIndustry = "null", maxBudget = "null",
+								maxCurrentlyEvaluatingCallAnalytics = "null", maxDepartment = "null", maxTitle = "null",
+								maxNumberOfEmployees = "null", maxCountry = "null";
+						
+						for(TableRow tableRow : rowIterable){
+
+							if(((String)tableRow.get("Revenue")).compareTo(maxRevenue) < 0){
+								maxRevenue = (String) tableRow.get("Revenue");
+							}
+							
+							if(((String)tableRow.get("EventTimeline")).compareTo(maxEventTimeline) < 0){
+								maxEventTimeline = (String) tableRow.get("EventTimeline");
+							}
+							
+							if(((String)tableRow.get("Industry")).compareTo(maxIndustry) < 0){
+								maxIndustry = (String) tableRow.get("Industry");
+							}
+							
+							if(((String)tableRow.get("Budget")).compareTo(maxBudget) < 0){
+								maxBudget = (String) tableRow.get("Budget");
+							}
+							
+							if(((String)tableRow.get("CurrentlyEvaluatingCallAnalytics")).compareTo(maxCurrentlyEvaluatingCallAnalytics) < 0){
+								maxCurrentlyEvaluatingCallAnalytics = (String) tableRow.get("CurrentlyEvaluatingCallAnalytics");
+							}
+							
+							if(((String)tableRow.get("Department")).compareTo(maxDepartment) < 0){
+								maxDepartment = (String) tableRow.get("Department");
+							}
+							
+							if(((String)tableRow.get("Title")).compareTo(maxTitle) < 0){
+								maxTitle = (String) tableRow.get("Title");
+							}
+							
+							if(((String)tableRow.get("NumberOfEmployees")).compareTo(maxNumberOfEmployees) < 0){
+								maxNumberOfEmployees = (String) tableRow.get("NumberOfEmployees");
+							}
+							
+							if(((String)tableRow.get("Country")).compareTo(maxCountry) < 0){
+								maxCountry = (String) tableRow.get("Country");
+							}
+						}
+						
+						freshRow.set("Revenue", maxRevenue);
+						freshRow.set("EventTimeline", maxEventTimeline);
+						freshRow.set("Industry", maxIndustry);
+						freshRow.set("Budget", maxBudget);
+						freshRow.set("CurrentlyEvaluatingCallAnalytics", maxCurrentlyEvaluatingCallAnalytics);
+						freshRow.set("Department", maxDepartment);
+						freshRow.set("Title", maxTitle);
+						freshRow.set("NumberOfEmployees", maxNumberOfEmployees);
+						freshRow.set("Country", maxCountry);
+						
+						context.output(freshRow);
+						
+					}
+				}));
+		
+		return pCollection;
+	}
+	
 	
 	
 	static PCollection<TableRow> combineTableDetails2(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
@@ -242,47 +436,72 @@ public class BasicTest9_v2 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
-		List<Field> fieldMetaDataList1 = getThemFields("Learning", "Temp_ProspectCallLog");
-		List<Field> fieldMetaDataList2 = getThemFields("Learning", "Temp_ProspectCall");
-		List<Field> fieldMetaDataList3 = getThemFields("Learning", "Temp_Prospect");
-		List<Field> fieldMetaDataList4 = getThemFields("Learning", "Temp_Answers");
-		List<Field> fieldMetaDataList5 = getThemFields("Learning", "Temp_CMPGN");
+//		List<Field> fieldMetaDataList1 = getThemFields("Xtaas", "prospectcalllog_new");
+//		List<Field> fieldMetaDataList2 = getThemFields("Xtaas", "prospectcall");
+//		List<Field> fieldMetaDataList3 = getThemFields("Xtaas", "prospect");
+//		List<Field> fieldMetaDataList4 = getThemFields("Xtaas", "answers");
+//		List<Field> fieldMetaDataList5 = getThemFields("Xtaas", "CMPGN");
+//
+//
+//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
+//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "prospectcalllog_new");
+//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "prospectcall");
+//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "prospect");
+//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "answers");
+//		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "CMPGN");
+//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+//
+//		PCollection<KV<String, TableRow>> source1Table = pipeline
+//				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
+//				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+//
+//		PCollection<KV<String, TableRow>> source2Table = pipeline
+//				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
+//				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+//
+//		PCollection<KV<String, TableRow>> source3Table = pipeline
+//				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
+//				.apply(ParDo.named("FormatData3").of(new ReadFromTable3()));
+//
+//		PCollection<KV<String, TableRow>> source4Table = pipeline
+//				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
+//				.apply(ParDo.named("FormatData4").of(new ReadFromTable4()));
+//
+//		PCollection<KV<String, TableRow>> source5Table = pipeline
+//				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
+//				.apply(ParDo.named("FormatData5").of(new ReadFromTable5()));
+//
+//		PCollection<TableRow> finalResult = multiCombine(source1Table, source2Table, source3Table, source4Table,
+//				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
+//				"A_", "B_", "C_", "D_");
+//
+//		PCollection<KV<String, TableRow>> join1Table = finalResult.apply(ParDo.of(new ReadFromJoinResult3()));
+//
+//		PCollection<TableRow> newFinalResult = combineTableDetails2(join1Table, source5Table, fieldMetaDataList5, "E_");
+		
+		PCollection<TableRow> newFinalResult = pipeline.apply(BigQueryIO.Read.from("vantage-167009:Learning.JoinTest9TempResult1"));
+		
+		PCollection<TableRow> itsAMario = newFinalResult.apply(ParDo.named("Filter").of(new Filter()))
+				.apply(ParDo.named("Select1").of(new Select1()));
+	
+		PCollection<TableRow> iterablePCollection = operations(itsAMario);
+//		newFinalResult.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
+//						.withSchema(tableSchema)
+//						.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
+//						.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
 		
-		PCollection<KV<String, TableRow>> source1Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
-				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
-		
-		PCollection<KV<String, TableRow>> source2Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
-				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
-		
-		PCollection<KV<String, TableRow>> source3Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
-				.apply(ParDo.named("FormatData3").of(new ReadFromTable3()));
-		
-		PCollection<KV<String, TableRow>> source4Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
-				.apply(ParDo.named("FormatData4").of(new ReadFromTable4()));
-		
-		PCollection<KV<String, TableRow>> source5Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
-				.apply(ParDo.named("FormatData5").of(new ReadFromTable5()));
-		
-		PCollection<TableRow> finalResult = multiCombine(source1Table, source2Table, source3Table, source4Table,
-				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
-				"A_", "B_", "C_", "D_");
-		
-		PCollection<KV<String, TableRow>> join1Table = finalResult.apply(ParDo.of(new ReadFromJoinResult3()));
-		
-		PCollection<TableRow> newFinalResult = combineTableDetails2(join1Table, source5Table, fieldMetaDataList5, "E_");
-
-		
-		newFinalResult.apply(ParDo.of(new ConvertToString()))
+		iterablePCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
 	}
 	
-	
+	@Test
+	public void test1(){
+		String str = "\"ARE_YOU_CURRENTLY_EVALUATING_LOCAL_MARKETING_AUTOMATION_PLATFORMS?\"";
+		String string = str.replaceAll("\"", "");
+		System.out.println(str);
+		System.out.println(string);
+	}
 }

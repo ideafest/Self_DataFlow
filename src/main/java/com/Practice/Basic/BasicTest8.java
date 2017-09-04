@@ -24,10 +24,11 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
+import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class BasicTest8 {
 	
@@ -45,6 +46,11 @@ public class BasicTest8 {
 		for(Field field : getThemFields(datasetName, tableName)){
 			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
 		}
+	}
+	
+	private static String getDate(String str){
+		StringTokenizer stringTokenizer = new StringTokenizer(str);
+		return stringTokenizer.nextToken();
 	}
 	
 	private static class ConvertToString extends DoFn<Iterable<TableRow>, String> {
@@ -182,7 +188,7 @@ public class BasicTest8 {
 			tableRow.set("agentId", element.get("C_agentId"));
 			tableRow.set("prospectCallId", element.get("C_prospectcallid"));
 			tableRow.set("prospectInteractionSessionId", element.get("C_prospectinteractionsessionid"));
-			tableRow.set("callDate", (Date)element.get("C_callstarttime"));
+			tableRow.set("callDate", new SimpleDateFormat((String) element.get("C_callstarttime")));
 			tableRow.set("status", element.get("C_status"));
 			tableRow.set("dispositionStatus", element.get("C_dispositionstatus"));
 			tableRow.set("subStatus", element.get("C_substatus"));
@@ -190,7 +196,7 @@ public class BasicTest8 {
 			tableRow.set("overallScore", element.get("E_overallScore"));
 			tableRow.set("qaComments", element.get("E_qaComments"));
 			tableRow.set("feedbackTime", element.get("E_feedbackTime"));
-			tableRow.set("feedbackDate", (Date)element.get("E_feedbackTime"));
+			tableRow.set("feedbackDate", new SimpleDateFormat((String) element.get("E_feedbackTime")));
 			tableRow.set("sectionName", element.get("A_sectionName"));
 			tableRow.set("attribute", element.get("D_attribute"));
 			tableRow.set("attributeComment", element.get("B_attributeComment"));
@@ -382,7 +388,19 @@ public class BasicTest8 {
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, Iterable<TableRow>> element = context.element();
 						Iterable<TableRow> rowIterable = element.getValue();
-						context.output(rowIterable);
+//						context.output(rowIterable);
+					
+						String maxStatus = "null", maxPhoneEtiquetterCustomerEngagement = "null",
+								maxPhonEtiquetteProfessionalism = "null", maxSalesmanshipRebuttalUse = "null",
+								maxSalesmanshipProvideInformation = "null", maxIntroductionMarketingEfforts = "null",
+								maxIntroductionBrandingPersonalCorporate = "null", maxClientPII = "null",
+								maxCustomerSatisfactionOverallService = "null", maxClientFullDetails = "null",
+								maxCallClosingBranding = "null", maxPhoneEtiquetteCallPAcing = "null",
+								maxPhoneEtiquetteCallHoledPurpose = "null", maxSalesmanshipQualificationQuestions = "null",
+								maxIntroductionPrepareReady = "null", maxIntrodcutionCallRecord = "null",
+								maxCustomerSatisfactionRespresentativeOnCall = "null",
+								maxClientPostQualificationQuestions = "null", maxClient
+								
 					}
 				}));
 		
@@ -425,7 +443,7 @@ public class BasicTest8 {
 				.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
 		
 		PCollection<KV<String, TableRow>> source4Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").from("vantage-167009:Learning.PCI_Temp"))
+				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.PC_PCI))
 				.apply(ParDo.named("FormatData4").of(new ReadFromTable2()));
 		
 		PCollection<TableRow> joinResult2 = combineTableDetails2(source3Table, source4Table,
@@ -486,6 +504,15 @@ public class BasicTest8 {
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 		pipeline.run();
+	}
+	
+	@Test
+	public void test(){
+		
+		String timestamp = "2016-11-10 13:22:44 UTC";
+		StringTokenizer stringTokenizer = new StringTokenizer(timestamp);
+		String token =stringTokenizer.nextToken();
+		System.out.println(token);
 	}
 	
 }

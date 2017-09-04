@@ -110,8 +110,22 @@ public class BasicTest7 {
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
 			String condition = (String) tableRow.get("A_sectionName");
+			
+			boolean aIsDirty = (boolean) tableRow.get("A_isdirty");
+			boolean aIsDeleted = (boolean) tableRow.get("A_isdeleted");
+			boolean bIsDirty = (boolean) tableRow.get("B_isdirty");
+			boolean bIsDeleted = (boolean) tableRow.get("B_isdeleted");
+			boolean cIsDirty = (boolean) tableRow.get("C_isdirty");
+			boolean cIsDeleted = (boolean) tableRow.get("C_isdeleted");
+			boolean dIsDirty = (boolean) tableRow.get("D_isdirty");
+			boolean dIsDeleted = (boolean) tableRow.get("D_isdeleted");
+			
 			logger.info("NOTICE : " + condition);
-			if (!(condition.equals("Customer Satisfaction"))) {
+			if (!(condition.equals("Customer Satisfaction"))
+					&& !aIsDirty && !aIsDeleted
+					&& !bIsDirty && !bIsDeleted
+					&& !cIsDirty && !cIsDeleted
+					&& !dIsDirty && !dIsDeleted) {
 				context.output(tableRow);
 			}
 		}

@@ -69,12 +69,26 @@ public class NewTest {
 		}
 	}
 	
+	private static class AfterOperation extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			String key = (String) context.element().get("_id");
+			context.output(KV.of(key, context.element()));
+		}
+	}
 	
 	private static class ConvertToString extends DoFn<TableRow, String> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			context.output(context.element().toPrettyString());
 		}
+	}
+	
+	private static PCollection<TableRow> maxOperation(PCollection<TableRow> rowPCollection){
+	
+		
+		return null;
+	
 	}
 	
 	static PCollection<TableRow> operations(PCollection<KV<String, TableRow>> currentRow){
@@ -241,6 +255,15 @@ public class NewTest {
 								maxPhoneEtiquette = 0.0d,
 								maxLeadValidation = 0.0d;
 						
+//						TableRow maxTableRow = new TableRow();
+						
+//						maxTableRow.set("CallClosing", row.get("CallClosing"));
+//						maxTableRow.set("Salesmanship",row.get("Salesmanship"));
+//						maxTableRow.set("ClientOfferAndSend", row.get("ClientOfferAndSend"));
+//						maxTableRow.set("Introduction", row.get("Introduction"));
+//						maxTableRow.set("PhoneEtiquette", row.get("PhoneEtiquette"));
+//						maxTableRow.set("LeadValidation", row.get("LeadValidation"));
+						
 						for(TableRow tableRow : rowIterable){
 							if((double)tableRow.get("CallClosing") > maxCallClosing){
 								maxCallClosing = (double)tableRow.get("CallClosing");
@@ -261,7 +284,7 @@ public class NewTest {
 								maxLeadValidation = (double)tableRow.get("LeadValidation");
 							}
 						}
-						
+//
 						row.set("CallClosing", maxCallClosing);
 						row.set("Salesmanship", maxSalesmanship);
 						row.set("ClientOfferAndSend", maxClientOfferAndSend);
@@ -272,6 +295,8 @@ public class NewTest {
 						context.output(row);
 					}
 				}));
+		
+		
 		
 		
 		return resultPCollection3;
@@ -286,6 +311,7 @@ public class NewTest {
 	
 	public static void main(String[] args) {
 		
+		Queries queries = new Queries();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
@@ -295,6 +321,15 @@ public class NewTest {
 		
 		
 		PCollection<TableRow> rowPCollection = operations(source1Table);
+		
+//		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
+//				.apply(ParDo.named("FormatData").of(new DoFn<TableRow, KV<String, TableRow>>() {
+//					@Override
+//					public void processElement(ProcessContext context) throws Exception {
+//						TableRow tableRow = context.element();
+//					}
+//				}));
+		
 		rowPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
