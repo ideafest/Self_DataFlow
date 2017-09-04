@@ -399,7 +399,11 @@ public class BasicTest8 {
 								maxPhoneEtiquetteCallHoledPurpose = "null", maxSalesmanshipQualificationQuestions = "null",
 								maxIntroductionPrepareReady = "null", maxIntrodcutionCallRecord = "null",
 								maxCustomerSatisfactionRespresentativeOnCall = "null",
-								maxClientPostQualificationQuestions = "null", maxClient
+								maxClientPostQualificationQuestions = "null", maxClientObtainCustomerConsent = "null",
+								maxCallClosingExpectationSetting = "null", maxCallClosingRedialNumber = "null",
+								maxLeadValidationValid = "null";
+						
+						
 								
 					}
 				}));

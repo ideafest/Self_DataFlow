@@ -2,6 +2,7 @@ com/Practice/Joins/Join6$ReadFromJoin2.class
 com/example/BQJoin3.class
 com/Practice/Basic/BasicTest8$ReadFromJoin2.class
 com/Practice/Basic/BasicTest3$ReadFromTable1.class
+com/Practice/Basic/NewTest$AfterOperation.class
 com/Practice/Basic/BasicTest8.class
 com/Practice/Basic/BasicTest9$ReadFromTable5.class
 com/example/Something/FieldArrayList.class
@@ -94,6 +95,7 @@ com/example/WordCountTemplate$WordCountOptions.class
 com/Practice/Basic/BasicTest9$1.class
 com/example/BQThings$Options.class
 com/Practice/Joins/Join6$ReadFromTable1.class
+com/Practice/Basic/BasicTest9_v2$3.class
 com/Practice/Basic/BasicTest6$1.class
 com/example/BigQueryTornadoes_v2.class
 com/example/WindowedWordCount$Options.class
@@ -280,6 +282,7 @@ com/example/BigQueryRandom$TableOptions.class
 com/example/ExportFromBQuery$BQOptions.class
 com/Practice/Basic/BasicTest7.class
 com/Practice/Basic/BasicTest7New$ReadFromTable3.class
+com/Practice/Basic/BasicTest9_v2$GroupBy1.class
 com/Practice/PJoin_v1$ExtractFromTable_1.class
 com/Practice/Basic/BasicTest5$ReadFromTable3.class
 com/Practice/Basic/BasicTest1_v2$1.class
