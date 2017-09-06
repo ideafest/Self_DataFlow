@@ -1,9 +1,9 @@
-package com.Practice.Basic;
+package com.Practice.Joins;
 
+import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
@@ -26,12 +26,10 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 import org.junit.Test;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-public class BasicTest9_v2 {
+public class Join7_v2 {
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -57,7 +55,7 @@ public class BasicTest9_v2 {
 			context.output(KV.of(id, tableRow));
 		}
 	}
-
+	
 	
 	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -67,7 +65,7 @@ public class BasicTest9_v2 {
 			context.output(KV.of(id, tableRow));
 		}
 	}
-
+	
 	
 	private static class ReadFromTable4 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -269,7 +267,7 @@ public class BasicTest9_v2 {
 								maxNumberOfEmployees = "null", maxCountry = "null";
 						
 						for(TableRow tableRow : rowIterable){
-
+							
 							if(((String)tableRow.get("Revenue")).compareTo(maxRevenue) < 0){
 								maxRevenue = (String) tableRow.get("Revenue");
 							}
@@ -441,7 +439,7 @@ public class BasicTest9_v2 {
 		Queries queries = new Queries();
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
-		
+
 //		List<Field> fieldMetaDataList1 = getThemFields("Xtaas", "prospectcalllog_new");
 //		List<Field> fieldMetaDataList2 = getThemFields("Xtaas", "prospectcall");
 //		List<Field> fieldMetaDataList3 = getThemFields("Xtaas", "prospect");
@@ -489,7 +487,7 @@ public class BasicTest9_v2 {
 		
 		PCollection<TableRow> itsAMario = newFinalResult.apply(ParDo.named("Filter").of(new Filter()))
 				.apply(ParDo.named("Select1").of(new Select1()));
-	
+		
 		PCollection<TableRow> iterablePCollection = operations(itsAMario);
 //		newFinalResult.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
 //						.withSchema(tableSchema)
@@ -510,4 +508,5 @@ public class BasicTest9_v2 {
 		System.out.println(str);
 		System.out.println(string);
 	}
+	
 }

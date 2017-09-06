@@ -11,6 +11,9 @@ import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CombineFnTest {
 	
 	private static class ExtractIntegerFields extends DoFn<TableRow, TableRow> {
@@ -28,21 +31,43 @@ public class CombineFnTest {
 		}
 	}
 	
-	private static PCollection<TableRow> maxData(PCollection<TableRow> rowPCollection){
-		
-		PCollection<TableRow> finalPCollection = rowPCollection
-				.apply(ParDo.named("Meh").of(new DoFn<TableRow, TableRow>() {
+	
+	private static PCollection<Integer> getData(PCollection<TableRow> rowPCollection, String key){
+		PCollection<Integer> integerPCollection = rowPCollection
+				.apply(ParDo.named("GetData").of(new DoFn<TableRow, Integer>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
-						
-						TableRow element = context.element();
-						int maxYear = 0, maxMonth = 0, maxDay = 0;
-						
+						int field = (int) context.element().get(key);
+						context.output(field);
 					}
 				}));
 		
-		
+		return integerPCollection;
 	}
+	
+//	private static PCollection<>
+	
+//	private static PCollection<TableRow> maxData(PCollection<TableRow> rowPCollection){
+//
+//		PCollection<List<TableRow>> finalPCollection = rowPCollection
+//				.apply(ParDo.named("Meh").of(new DoFn<TableRow, List<TableRow>>() {
+//					@Override
+//					public void processElement(ProcessContext context) throws Exception {
+//
+//						TableRow element = context.element();
+//						int maxYear = 0, maxMonth = 0, maxDay = 0;
+//
+////						List<TableRow> rowList = new ArrayList<>();
+////						rowList.add((TableRow) element.get("year"));
+//
+//
+//
+//
+//					}
+//				}));
+//			return null;
+//		}
+
 	
 	interface Options extends PipelineOptions {
 		@Description("Output path for String")

@@ -80,7 +80,8 @@ public class BasicTest1 {
 						
 						for(TableRow tableRow1 : rowIterator1){
 							for(TableRow tableRow2 : rowIterator2){
-								context.output("T1 D: "+tableRow1.toPrettyString() +", T2 D: "+tableRow2.toPrettyString());
+//								context.output("T1 D: "+tableRow1.toPrettyString() +", T2 D: "+tableRow2.toPrettyString());
+								context.output(String.valueOf(tableRow1.keySet()));
 							}
 						}
 						

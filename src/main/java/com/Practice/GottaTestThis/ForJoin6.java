@@ -1,5 +1,7 @@
-package com.Practice.Basic;
+package com.Practice.GottaTestThis;
 
+import com.Practice.Basic.BasicTest7New;
+import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
@@ -10,11 +12,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -29,7 +27,7 @@ import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BasicTest7New {
+public class ForJoin6 {
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -47,7 +45,7 @@ public class BasicTest7New {
 		}
 	}
 	
-	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -65,7 +63,7 @@ public class BasicTest7New {
 		}
 	}
 	
-
+	
 	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -273,7 +271,7 @@ public class BasicTest7New {
 	}
 	
 	static PCollection<TableRow> operations(PCollection<TableRow> rowPCollection){
-
+		
 		PCollection<KV<String, TableRow>> currentRow = rowPCollection.apply(ParDo.of(new Select()));
 		
 		PCollection<KV<String, Iterable<TableRow>>> groupedBy = currentRow.apply(GroupByKey.create());
@@ -472,18 +470,9 @@ public class BasicTest7New {
 		return resultPCollection3;
 	}
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public static void main(String[] args) {
+	public PCollection<TableRow> runIt(Pipeline pipeline){
 		
 		Queries queries = new Queries();
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
 		
 		PCollection<KV<String, TableRow>> source1Table = pipeline
 				.apply(BigQueryIO.Read.named("Reader1").from(queries.pciFeedbackResponseList))
@@ -504,7 +493,7 @@ public class BasicTest7New {
 				fieldMetaDataList1, fieldMetaDataList2, "A_", "B_");
 		
 		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
-					.apply(ParDo.named("FormatData3").of(new ReadFromJoinResult1()));
+				.apply(ParDo.named("FormatData3").of(new ReadFromJoinResult1()));
 		
 		PCollection<KV<String, TableRow>> source3Table = pipeline
 				.apply(BigQueryIO.Read.named("Reader4").from(queries.pciProspectCall))
@@ -516,51 +505,22 @@ public class BasicTest7New {
 		
 		PCollection<KV<String, TableRow>> joinResult2 = rowPCollection2
 				.apply(ParDo.named("FormatData5").of(new ReadFromJoinResult2()));
-
+		
 		PCollection<KV<String, TableRow>> source4Table = pipeline
 				.apply(BigQueryIO.Read.named("Reader6").fromQuery(queries.CMPGN))
 				.apply(ParDo.named("FormatData6").of(new ReadFromTable4()));
-
+		
 		PCollection<TableRow> rowPCollection3 = combineTableDetails2(joinResult2, source4Table,
 				fieldMetaDataList4, "D_");
 		
 		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "pci_prospectcall");
-//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "CMPGN");
-
-		fieldSchemaList.add(new TableFieldSchema().setName("_id").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("campaignId").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("agentId").setType("STRING"));
-		fieldSchemaList.add(new TableFieldSchema().setName("CallClosing").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("Salesmanship").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("ClientOfferAndSend").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("Introduction").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("PhoneEtiquette").setType("FLOAT"));
-		fieldSchemaList.add(new TableFieldSchema().setName("LeadValidation").setType("FLOAT"));
-
-
-		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-
 		PCollection<TableRow> itsAPCollection = rowPCollection3.apply(ParDo.of(new Filter()))
 				.apply(ParDo.of(new FinalFieldTableRow()));
-
+		
 		PCollection<TableRow> pCollection = operations(itsAPCollection);
-
-		pCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-				.withSchema(tableSchema)
-				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
 		
+		return pCollection;
 		
-		
-		
-//		pCollection.apply(ParDo.of(new ConvertToString()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-//
-		pipeline.run();
 	}
 	
 }

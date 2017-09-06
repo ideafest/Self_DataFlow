@@ -1,20 +1,16 @@
-package com.Practice.Basic;
+package com.Practice.GottaTestThis;
 
+import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -24,13 +20,11 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
+import java.util.StringTokenizer;
 
-public class BasicTest8 {
+public class ForJoin7 {
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -56,9 +50,9 @@ public class BasicTest8 {
 	private static class ConvertToString extends DoFn<TableRow, String> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
-
+			
 			context.output(context.element().toPrettyString());
-
+			
 		}
 	}
 	
@@ -79,7 +73,7 @@ public class BasicTest8 {
 			context.output(KV.of(id, tableRow));
 		}
 	}
-
+	
 	
 	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -167,10 +161,10 @@ public class BasicTest8 {
 			String overallScore = (String) element.get("overallScore");
 			String feedbackTime = (String) element.get("feedbackTime");
 			String feedbackDate = (String) element.get("feedbackDate");
-
+			
 			String finalKey = id + campaignId + agentId + prospectCallId + prospectInteractionSessionId
-						+ callStartTime + callDate + dispositionStatus + subStatus + qaId + overallScore
-						+ feedbackTime + feedbackDate;
+					+ callStartTime + callDate + dispositionStatus + subStatus + qaId + overallScore
+					+ feedbackTime + feedbackDate;
 			
 			context.output(KV.of(finalKey, element));
 		}
@@ -389,7 +383,7 @@ public class BasicTest8 {
 						KV<String, Iterable<TableRow>> element = context.element();
 						Iterable<TableRow> rowIterable = element.getValue();
 //						context.output(rowIterable);
-					
+						
 						TableRow freshRow = rowIterable.iterator().next();
 						
 						String maxStatus = "null", maxPhoneEtiquetteCustomerEngagement = "null",
@@ -407,91 +401,91 @@ public class BasicTest8 {
 						
 						
 						for(TableRow tableRow : rowIterable){
-						
+							
 							if(((String) tableRow.get("status")).compareTo(maxStatus) > 0){
 								maxStatus = (String) tableRow.get("status");
 							}
-	
+							
 							if(((String) tableRow.get("PhoneEtiquette_Customer_Engagement")).compareTo(maxPhoneEtiquetteCustomerEngagement) > 0){
 								maxPhoneEtiquetteCustomerEngagement = (String) tableRow.get("PhoneEtiquette_Customer_Engagement");
 							}
-	
+							
 							if(((String) tableRow.get("PhoneEtiquette_Professionalism")).compareTo(maxPhoneEtiquetteProfessionalism) > 0){
 								maxPhoneEtiquetteProfessionalism = (String) tableRow.get("PhoneEtiquette_Professionalism");
 							}
-	
+							
 							if(((String) tableRow.get("Salesmanship_Provide_Information")).compareTo(maxSalesmanshipProvideInformation) > 0){
 								maxSalesmanshipProvideInformation = (String) tableRow.get("Salesmanship_Provide_Information");
 							}
-	
+							
 							if(((String) tableRow.get("Salesmanship_Rebuttal_Use")).compareTo(maxSalesmanshipRebuttalUse) > 0){
 								maxSalesmanshipRebuttalUse = (String) tableRow.get("Salesmanship_Rebuttal_Use");
 							}
-	
+							
 							if(((String) tableRow.get("Introduction_Marketing_Efforts")).compareTo(maxIntroductionMarketingEfforts) > 0){
 								maxIntroductionMarketingEfforts = (String) tableRow.get("Introduction_Marketing_Efforts");
 							}
-	
+							
 							if(((String) tableRow.get("Introduction_Branding_Personal_Corporate")).compareTo(maxIntroductionBrandingPersonalCorporate) > 0){
 								maxIntroductionBrandingPersonalCorporate = (String) tableRow.get("Introduction_Branding_Personal_Corporate");
 							}
-	
+							
 							if(((String) tableRow.get("CustomerSatisfaction_Overall_Service")).compareTo(maxCustomerSatisfactionOverallService) > 0){
 								maxCustomerSatisfactionOverallService = (String) tableRow.get("CustomerSatisfaction_Overall_Service");
 							}
-	
+							
 							if(((String) tableRow.get("Client_PII")).compareTo(maxClientPII) > 0){
 								maxClientPII = (String) tableRow.get("Client_PII");
 							}
-	
+							
 							if(((String) tableRow.get("Client_Full_Details")).compareTo(maxClientFullDetails) > 0){
 								maxClientFullDetails = (String) tableRow.get("Client_Full_Details");
 							}
-	
+							
 							if(((String) tableRow.get("CallClosing_Branding_Personal_Corporate")).compareTo(maxCallClosingBranding) > 0){
 								maxCallClosingBranding = (String) tableRow.get("CallClosing_Branding_Personal_Corporate");
 							}
-	
+							
 							if(((String) tableRow.get("PhoneEtiquette_Call_Pacing")).compareTo(maxPhoneEtiquetteCallPacing) > 0){
 								maxPhoneEtiquetteCallPacing = (String) tableRow.get("PhoneEtiquette_Call_Pacing");
 							}
-	
+							
 							if(((String) tableRow.get("PhoneEtiquette_Call_Hold_Purpose")).compareTo(maxPhoneEtiquetteCallHoldPurpose) > 0){
 								maxPhoneEtiquetteCallHoldPurpose = (String) tableRow.get("PhoneEtiquette_Call_Hold_Purpose");
 							}
-	
+							
 							if(((String) tableRow.get("Salesmanship_Pre-Qualification_Questions")).compareTo(maxSalesmanshipQualificationQuestions) > 0){
 								maxSalesmanshipQualificationQuestions = (String) tableRow.get("Salesmanship_Pre-Qualification_Questions");
 							}
-	
+							
 							if(((String) tableRow.get("Introduction_Prepare_Ready")).compareTo(maxIntroductionPrepareReady) > 0){
 								maxIntroductionPrepareReady = (String) tableRow.get("Introduction_Prepare_Ready");
 							}
-	
+							
 							if(((String) tableRow.get("Introduction_Call_Record")).compareTo(maxIntroductionCallRecord) > 0){
 								maxIntroductionCallRecord = (String) tableRow.get("Introduction_Call_Record");
 							}
-	
+							
 							if(((String) tableRow.get("CustomerSatisfaction_Representative_On_Call")).compareTo(maxCustomerSatisfactionRepresentativeOnCall) > 0){
 								maxCustomerSatisfactionRepresentativeOnCall = (String) tableRow.get("CustomerSatisfaction_Representative_On_Call");
 							}
-	
+							
 							if(((String) tableRow.get("Client_Post-Qualification_Questions")).compareTo(maxClientPostQualificationQuestions) > 0){
 								maxClientPostQualificationQuestions = (String) tableRow.get("Client_Post-Qualification_Questions");
 							}
-	
+							
 							if(((String) tableRow.get("Client_Obtain_Customer_Consent")).compareTo(maxClientObtainCustomerConsent) > 0){
 								maxClientObtainCustomerConsent = (String) tableRow.get("Client_Obtain_Customer_Consent");
 							}
-	
+							
 							if(((String) tableRow.get("CallClosing_Expectation_Setting")).compareTo(maxCallClosingExpectationSetting) > 0){
 								maxCallClosingExpectationSetting = (String) tableRow.get("CallClosing_Expectation_Setting");
 							}
-	
+							
 							if(((String) tableRow.get("CallClosing_Redial_Number")).compareTo(maxCallClosingRedialNumber) > 0){
 								maxCallClosingRedialNumber = (String) tableRow.get("CallClosing_Redial_Number");
 							}
-	
+							
 							if(((String) tableRow.get("Lead_Validation_Valid")).compareTo(maxLeadValidationValid) > 0){
 								maxLeadValidationValid = (String) tableRow.get("Lead_Validation_Valid");
 							}
@@ -527,17 +521,9 @@ public class BasicTest8 {
 		return iterablePCollection;
 	}
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public static void main(String[] args) {
+	public PCollection<TableRow> runIt(Pipeline pipeline){
+		
 		Queries queries = new Queries();
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
 		
 		List<Field> fieldMetaDataList1 = getThemFields("Xtaas","pci_feedbackResponseList");
 		List<Field> fieldMetaDataList2 = getThemFields("Xtaas","pci_responseAttributes");
@@ -602,48 +588,13 @@ public class BasicTest8 {
 		PCollection<TableRow> finalResult = combineTableDetails2(source9Table, source10Table,
 				fieldMetaDataList6, "F_");
 		
-//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "pci_feedbackResponseList");
-//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "pci_responseAttributes");
-//		setTheTableSchema(fieldSchemaList, "C_","Xtaas", "PC_PCI");
-//		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "qafeedbackformattributes");
-//		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "pci_qafeedback");
-//		setTheTableSchema(fieldSchemaList, "F_","Xtaas", "CMPGN");
-//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-
-//		finalResult.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
-
+		
 		PCollection<TableRow> rowPCollection = finalResult.apply(ParDo.of(new FinalFieldTableRow()));
 		
 		PCollection<TableRow> iterablePCollection = operations(rowPCollection);
 		
-		iterablePCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
-		pipeline.run();
-	}
+		return iterablePCollection;
 	
-	@Test
-	public void test(){
-		
-		String timestamp = "2016-11-10 13:22:44 UTC";
-		StringTokenizer stringTokenizer = new StringTokenizer(timestamp);
-		String token = stringTokenizer.nextToken();
-		System.out.println(token);
 	}
-	
-	@Test
-	public void test2(){
-		String str1 = "xyz";
-		String str2 = "abc";
-		
-		int res1 = str1.compareTo(str2);
-		int res2 = str2.compareTo(str1);
-		System.out.println(res1);
-		System.out.println(res2);
-	}
-	
+
 }

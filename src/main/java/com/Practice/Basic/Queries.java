@@ -32,7 +32,7 @@ public class Queries {
 			"domain,dailycap,qualificationclause,leadfilteringclause,\n" +
 			"selfmanageteam,currentassetid,dialermode,createddate,\n" +
 			"createdby,updateddate,updatedby,version,isdeleted,isdirty \n" +
-			"FROM [vantage-167009:Xtaas.campaign] WHERE status = 'RUNNING' ;";
+			"FROM [vantage-167009:Xtaas.campaign] WHERE status in ('RUNNING','PAUSED','STOPPED','COMPLETED') ;";
 	
 	public final String master_status = "vantage-167009:Xtaas.master_status";
 	

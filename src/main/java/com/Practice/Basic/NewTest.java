@@ -22,7 +22,7 @@ import java.util.List;
 
 public class NewTest {
 
-	private static final String tableName = "vantage-167009:Learning.JoinTest9Temp2";
+	private static final String tableName = "vantage-167009:Learning.JoinTest9BestResult";
 	
 	private static class Select extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
