@@ -62,4 +62,8 @@ public class Queries {
 	public final String temp_prospect = "vantage-167009:Learning.Temp_Prospect";
 	public final String temp_answers = "vantage-167009:Learning.Temp_Answers";
 	public final String temp_CMPGN = "vantage-167009:Learning.Temp_CMPGN";
+	
+	public final String temp_PCPCI = "vantage-167009:Learning.PCI_Temp";
+	public final String temp_PciProspect = "vantage-167009:Learning.Temp_PciProspect";
+	public final String pciProspect = "vantage-167009:Xtaas.pci_prospect";
 }
