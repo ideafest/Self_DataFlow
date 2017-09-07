@@ -1,21 +1,15 @@
-package com.Practice.Joins;
+package com.Practice.GottaTestThis;
 
 import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -25,13 +19,11 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-public class Join1 {
+public class ForJoin1 {
 	
 	private static List<Field> getThemFields(String datasetName, String tableName){
 		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
@@ -49,7 +41,7 @@ public class Join1 {
 		}
 	}
 	
-	static class Extract1 extends DoFn<TableRow, KV<String, TableRow>>{
+	static class Extract1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -101,7 +93,7 @@ public class Join1 {
 	}
 	
 	
-
+	
 	
 	private static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, String table1Prefix, String table2Prefix){
@@ -198,24 +190,9 @@ public class Join1 {
 		
 	}
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for Table")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public static void main(String[] args) {
+	public PCollection<TableRow> runIt(Pipeline pipeline){
+		
 		Queries queries = new Queries();
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
-		
-		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-		
-		setTheTableSchema(fieldSchemaList, "A_","Learning", "PCI_Temp");
-		setTheTableSchema(fieldSchemaList, "B_","Xtaas","master_status");
-		
-		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
 		
 		PCollection<TableRow> sourceTable1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from("vantage-167009:Learning.PCI_Temp"));
 		PCollection<TableRow> sourceTable2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status));
@@ -223,29 +200,11 @@ public class Join1 {
 		PCollection<TableRow> resultPCollection = combineTableDetails(sourceTable1, sourceTable2, "A_", "B_");
 		
 		PCollection<TableRow> result = operations(resultPCollection);
+
+//		result.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
-//		resultPCollection.apply(BigQueryIO.Write.named("Writer").to(options.getOutput())
-//				.withSchema(tableSchema)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED));
-		
-		result.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
-		
-		pipeline.run();
+		return result;
 	}
 	
-	@Test
-	public void test1(){
-		String prospectCallId = "b2beb83d-558e-4d67-b559-a667ee43f9ab";
-		String code = "CALL_CANCELED";
-		String str = "2017-09-06 14:19:29.942";
-		StringTokenizer stringTokenizer = new StringTokenizer(str);
-		String updatedDate = stringTokenizer.nextToken() + " " + stringTokenizer.nextToken();
-		String res = prospectCallId + "-" + updatedDate + "-" +  code;
-		System.out.println(res);
-		
-		System.out.println(nvl(prospectCallId, str, code));
-	}
 }

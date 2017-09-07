@@ -27,6 +27,7 @@ com/Practice/Basic/BasicTest7New.class
 com/example/BQJoin3$ExtractFromTable_1.class
 com/Practice/Basic/BasicTest1_v2.class
 com/Practice/Basic/BasicTest7New$ConvertToString.class
+com/Practice/GottaTestThis/ForJoin2$Extract3.class
 com/example/BQuery$doThatOperation$1.class
 com/Practice/GottaTestThis/NumeroUno$Options.class
 com/example/BQJoin$Options.class
@@ -34,6 +35,7 @@ com/example/ExportFromTable.class
 com/example/BQJoin.class
 com/example/WindowedWordCount.class
 com/Practice/GottaTestThis/NumeroUno.class
+com/Practice/GottaTestThis/NumeroDos.class
 com/Practice/Basic/ReallyBasic$Options.class
 com/Practice/Joins/Join1$2.class
 com/Practice/Basic/NewTest$3.class
@@ -46,6 +48,7 @@ BQuery_v2.class
 com/example/WordCount$WordCountOptions$OutputFactory.class
 com/example/BQuery$Options.class
 com/example/ExportFromBQ$ExtractData.class
+com/Practice/GottaTestThis/ForJoin1$2.class
 com/Practice/Joins/Join4$ReadFromTable1.class
 com/Practice/GottaTestThis/ForJoin6$Select1.class
 com/Practice/Joins/Join1$Options.class
@@ -65,7 +68,9 @@ com/Practice/Basic/BasicTest9$ReadFromTable4.class
 com/Practice/Basic/BasicTest1_v2$ReadFromTable1.class
 com/Practice/GottaTestThis/ForJoin6$Filter.class
 com/example/ExportFromBQ.class
+com/Practice/GottaTestThis/ForJoin2$Filter.class
 com/Practice/GottaTestThis/ForJoin7$2.class
+com/Practice/GottaTestThis/ForJoin1$Extract1.class
 com/example/BQJoin$ExtractFromSource_2.class
 com/example/Something/GottaTestThis$ExtractDataFromSideInputTable.class
 com/example/SideView_v2$BelowTheMean.class
@@ -80,6 +85,7 @@ com/Practice/Basic/BasicTest7$Options.class
 com/Practice/Basic/NewTest$Select.class
 com/example/BigQueryTornadoes$Options.class
 com/Practice/Joins/Join1$Extract1.class
+com/Practice/Basic/BasicTest11$Filter.class
 com/example/BigQueryTornadoes.class
 com/example/LocalWordCount$FormatText.class
 com/example/SideFilter$ExtractFromTable.class
@@ -107,6 +113,7 @@ com/Practice/Basic/BasicTest7$FilterData.class
 com/Practice/Joins/Join6$1.class
 com/Practice/Joins/Join3.class
 com/Practice/Joins/Join3$Options.class
+com/Practice/GottaTestThis/ForJoin2$2.class
 com/example/SideViewTrial$PerformProcessing.class
 com/example/BQuery$ExtractWords.class
 com/Practice/Joins/Join6$ConvertToString.class
@@ -115,6 +122,7 @@ com/Practice/Basic/BasicTest7$3.class
 com/example/MinimalWordCount$1.class
 com/example/common/DataflowExampleUtils.class
 com/Practice/Basic/BasicTest8$FinalFieldTableRow.class
+com/Practice/GottaTestThis/ForJoin2$1.class
 com/example/WordCountTemplate$WordCountOptions$OutputFactory.class
 com/Practice/Basic/BasicTest8$1.class
 com/Practice/MainTestClass$Options.class
@@ -124,6 +132,7 @@ com/example/ExportAsCSV$3.class
 com/example/BQThings_v2.class
 com/example/WindowedWordCount$FormatAsTableRowFn.class
 com/example/ExportFromBQuery$ExtractData.class
+com/Practice/GottaTestThis/ForJoin2$FinalFieldTableRow.class
 com/example/LocalWordCount.class
 com/Practice/Basic/BasicTest8$2.class
 com/example/Something/GottaTestThis.class
@@ -144,6 +153,7 @@ com/example/SideViewTrial$ExtractWordLen.class
 com/Practice/Joins/Join1$GroupByKeys1.class
 com/example/SideFilter.class
 com/Practice/GottaTestThis/ForJoin6$Select2.class
+com/Practice/GottaTestThis/NumeroDos$Options.class
 com/Practice/Joins/Join1$1.class
 com/Practice/Joins/Join4.class
 com/example/WordCount$FormatAsTextFn.class
@@ -168,6 +178,7 @@ com/example/WordCountTemplate$CountWords.class
 com/Practice/Basic/BetterReallyBasic$1.class
 com/Practice/GottaTestThis/ForJoin7$ReadFromJoin3.class
 com/example/BigQueryRandom$TableOptions.class
+com/Practice/GottaTestThis/ForJoin1$ConvertToString.class
 com/example/ExportFromBQuery$BQOptions.class
 com/Practice/Basic/BasicTest9_v2$GroupBy1.class
 com/Practice/PJoin_v1$ExtractFromTable_1.class
@@ -179,8 +190,10 @@ com/example/BQJoin3.class
 com/Practice/Basic/NewTest$AfterOperation.class
 com/Practice/Basic/BasicTest8.class
 com/Practice/Basic/BasicTest9$ReadFromTable5.class
+com/Practice/GottaTestThis/ForJoin1$GroupByKeys1.class
 com/Practice/Joins/Join6$Options.class
 com/Practice/GottaTestThis/ForJoin6$2.class
+com/Practice/GottaTestThis/ForJoin1$1.class
 com/Practice/Basic/BasicTest7New$FinalFieldTableRow.class
 com/Practice/NewTestClass.class
 com/Practice/GottaTestThis/NumeroUno$ExtractFromColl.class
@@ -196,14 +209,17 @@ com/Practice/Basic/CombineFnTest$Options.class
 com/example/SideViewTrial$PerformProcessing$1.class
 com/Practice/Basic/BasicTest8$ReadFromTable5.class
 com/Practice/Basic/BasicTest11$FinalFieldTableRow.class
+com/Practice/GottaTestThis/NumeroDos$1.class
 com/example/WindowedWordCount$AddTimestampFn.class
 com/example/Something/GottaTestThis$ExtractDataFromMainTable.class
+com/Practice/GottaTestThis/ForJoin2$ConvertToString.class
 com/Practice/Basic/BasicTest3.class
 com/Practice/Basic/BasicTest11$1.class
 com/Practice/Basic/NewTest$4.class
 com/Practice/Basic/NewTest$Options.class
 com/example/BQJoin3$ExtractFromTable_2.class
 com/Practice/Basic/NewTest$Select2.class
+com/Practice/GottaTestThis/ForJoin2$Extract2.class
 com/Practice/Joins/Join1.class
 com/Practice/Basic/BasicTest7New$ReadFromJoinResult2.class
 com/Practice/Basic/BasicTest3$ReadFromTable2.class
@@ -227,6 +243,8 @@ com/example/common/ExamplePubsubTopicOptions$PubsubTopicFactory.class
 com/Practice/Basic/BasicTest7New$Select.class
 com/Practice/Basic/BasicTest3$Options.class
 com/Practice/GottaTestThis/ForJoin7$4.class
+com/Practice/GottaTestThis/NumeroDos$Extract1.class
+com/Practice/GottaTestThis/ForJoin1$Extract2.class
 com/example/WordCountTemplate$WordCountOptions.class
 com/Practice/Basic/BasicTest9$1.class
 com/Practice/GottaTestThis/ForJoin7$ConvertToString.class
@@ -295,6 +313,7 @@ com/Practice/Basic/BasicTest5$1.class
 com/Practice/GottaTestThis/ForJoin6$6.class
 com/Practice/Basic/NewTest.class
 com/Practice/Basic/BasicTest9$ReadFromJoinResult2.class
+com/Practice/GottaTestThis/ForJoin1.class
 com/Practice/Basic/BasicTest2$Options.class
 com/Practice/Basic/BasicTest4.class
 com/example/BQuery$1.class
@@ -310,11 +329,13 @@ com/example/WordCountTemplate$FormatAsTextFn.class
 com/Practice/Basic/BasicTest7New$Filter.class
 com/example/SideView_v2$ExtractTemp.class
 com/example/common/ExampleBigQueryTableOptions.class
+com/Practice/GottaTestThis/ForJoin2$Extract1.class
 com/Practice/GottaTestThis/ForJoin6$1.class
 com/Practice/Basic/BasicTest9$ReadFromTable1.class
 com/Practice/Basic/Queries.class
 com/example/DebuggingWordCount$WordCountOptions.class
 com/Practice/Basic/NewTest$Select1.class
+com/Practice/GottaTestThis/ForJoin2.class
 com/Practice/Basic/BasicTest8$ReadFromJoin3.class
 com/Practice/Basic/BasicTest9.class
 com/Practice/Basic/NewTest$2.class

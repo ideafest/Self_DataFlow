@@ -629,7 +629,7 @@ public class BasicTest8 {
 	@Test
 	public void test(){
 		
-		String timestamp = "2016-11-10 13:22:44 UTC";
+		String timestamp = "2017-09-06 14:19:29.942";
 		StringTokenizer stringTokenizer = new StringTokenizer(timestamp);
 		String token = stringTokenizer.nextToken();
 		System.out.println(token);

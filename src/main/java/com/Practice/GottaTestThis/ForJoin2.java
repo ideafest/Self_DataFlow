@@ -1,13 +1,11 @@
-package com.Practice.Basic;
+package com.Practice.GottaTestThis;
 
+import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
@@ -16,11 +14,10 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
 
 import java.util.StringTokenizer;
 
-public class BasicTest11 {
+public class ForJoin2 {
 	
 	private static class ConvertToString extends DoFn<TableRow, String> {
 		@Override
@@ -241,18 +238,9 @@ public class BasicTest11 {
 		return resultPCollection;
 	}
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public static void main(String[] args) {
+	public PCollection<TableRow> runIt(Pipeline pipeline){
 		
 		Queries queries = new Queries();
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
 		
 		PCollection<KV<String, TableRow>> source1Table = pipeline
 				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_PCPCI))
@@ -274,28 +262,11 @@ public class BasicTest11 {
 				.apply(ParDo.named("FormatData4").of(new Extract3()));
 		
 		PCollection<TableRow> rowPCollection2 = combineTableDetails2(joinResult1, source3Table,
-				 "C_");
+				"C_");
 		
 		
-		rowPCollection2.apply(ParDo.of(new Filter()))
-				.apply(ParDo.of(new FinalFieldTableRow()))
-				.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
-		
-
-		pipeline.run();
-	}
-
-	@Test
-	public void test1(){
-		
-		String prospectHandleDurationRes = "";
-		int prospectHandleDuration = 43;
-		String s = String.valueOf(prospectHandleDuration / 60) + "0";
-		String s2 = String.valueOf(prospectHandleDuration % 60);
-		System.out.println(s+":"+s2);
-		
+		return rowPCollection2.apply(ParDo.of(new Filter()))
+				.apply(ParDo.of(new FinalFieldTableRow()));
 	}
 	
 }
