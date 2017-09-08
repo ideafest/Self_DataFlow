@@ -1,10 +1,9 @@
-package com.Practice.Joins;
+package com.Practice.GottaTestThis;
 
 import com.Practice.Basic.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
@@ -25,13 +24,10 @@ import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
-public class Join3 {
-	
-	private static Queries queries = new Queries();
-	
+public class ForJoin3 {
 	
 	private static class ConvertToString extends DoFn<TableRow, String> {
 		@Override
@@ -118,6 +114,28 @@ public class Join3 {
 		
 		return resultPCollection;
 	}
+	private static String getDate(String str){
+		StringTokenizer stringTokenizer = new StringTokenizer(str);
+		return stringTokenizer.nextToken();
+	}
+	
+	private static class Filter extends DoFn<TableRow, TableRow> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			TableRow freshRow = new TableRow();
+			
+			freshRow.set("campaignID", element.get("B_campaignid"));
+			freshRow.set("prospectCallID", element.get("B_prospectcallid"));
+			if(element.get("A_createddate") == null){
+				freshRow.set("batch_date", "null");
+			}
+			else{
+				freshRow.set("batch_date", getDate((String) element.get("A_createddate")));
+			}
+			context.output(freshRow);
+		}
+	}
 	
 	interface Options extends PipelineOptions {
 		@Description("Output path for String")
@@ -126,10 +144,8 @@ public class Join3 {
 		void setOutput(String output);
 	}
 	
-	public static void main(String[] args) {
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
-		
+	public PCollection<TableRow> runIt(Pipeline pipeline) {
+		Queries queries = new Queries();
 		PCollection<KV<String, TableRow>> source1Table = pipeline
 				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.prospectCallLog))
 				.apply(ParDo.of(new ReadFromTable1()));
@@ -137,19 +153,9 @@ public class Join3 {
 				.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.prospectCall))
 				.apply(ParDo.of(new ReadFromTable2()));
 		
-//		List<TableFieldSchema> fieldSchemaList = new ArrayList<>();
-//		setTheTableSchema(fieldSchemaList, "A_","Xtaas", "prospectcalllog");
-//		setTheTableSchema(fieldSchemaList, "B_","Xtaas", "prospectcall");
-//		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
-		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, "A_", "B_");
 		
-		rowPCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.to(options.getOutput()));
-//				.withSchema(tableSchema)
-//				.withCreateDisposition(BigQueryIO.Write.CreateDisposition.CREATE_IF_NEEDED)
-//				.withWriteDisposition(BigQueryIO.Write.WriteDisposition.WRITE_TRUNCATE));
-		
-		pipeline.run();
+		return rowPCollection.apply(ParDo.of(new Filter()));
 	}
+
 }
