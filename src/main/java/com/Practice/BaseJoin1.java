@@ -1,4 +1,4 @@
-package com.FinalJoins.Join1;
+package com.Practice;
 
 import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;

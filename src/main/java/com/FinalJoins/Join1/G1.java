@@ -1,13 +1,7 @@
-package com.Practice.Joins;
+package com.FinalJoins.Join1;
 
 import com.Practice.Basic.Queries;
-import com.example.BigQuerySnippets;
-import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
@@ -24,30 +18,12 @@ import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
-import org.junit.Test;
 
-import java.util.List;
 import java.util.StringTokenizer;
 
-public class Join7_v2 {
+public class G1 {
 	
-	private static List<Field> getThemFields(String datasetName, String tableName){
-		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable(datasetName,tableName);
-		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
-		
-		return fieldSchemas;
-	}
-	
-	private static void setTheTableSchema(List<TableFieldSchema> fieldSchemaList, String tablePrefix, String datasetName, String tableName){
-		
-		for(Field field : getThemFields(datasetName, tableName)){
-			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
-		}
-	}
-	
-	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
+	private static class ExtractFromProspectCallLog_ProspectCall extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -57,7 +33,7 @@ public class Join7_v2 {
 	}
 	
 	
-	private static class ReadFromTable3 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ExtractFromProspect extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -67,7 +43,7 @@ public class Join7_v2 {
 	}
 	
 	
-	private static class ReadFromTable4 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ExtractFromAnswers extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -85,7 +61,7 @@ public class Join7_v2 {
 		}
 	}
 	
-	private static class ReadFromTable5 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ExtractFromCMPGN extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
@@ -431,50 +407,88 @@ public class Join7_v2 {
 		void setOutput(String output);
 	}
 	
-	public static void main(String[] args) {
-		
+	public PCollection<TableRow> runIt(Pipeline pipeline){
 		Queries queries = new Queries();
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
-
+		
 		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
-				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+				.apply(ParDo.named("FormatData1").of(new ExtractFromProspectCallLog_ProspectCall()));
 		
 		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
-				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+				.apply(ParDo.named("FormatData2").of(new ExtractFromProspectCallLog_ProspectCall()));
 		
 		PCollection<KV<String, TableRow>> prospectPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
-				.apply(ParDo.named("FormatData3").of(new ReadFromTable3()));
+				.apply(ParDo.named("FormatData3").of(new ExtractFromProspect()));
 		
 		PCollection<KV<String, TableRow>> answersPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
-				.apply(ParDo.named("FormatData4").of(new ReadFromTable4()));
+				.apply(ParDo.named("FormatData4").of(new ExtractFromAnswers()));
 		
 		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
-				.apply(ParDo.named("FormatData5").of(new ReadFromTable5()));
+				.apply(ParDo.named("FormatData5").of(new ExtractFromCMPGN()));
 		
-		PCollection<TableRow> finalResult = multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
+		PCollection<TableRow> tempPCollection1 = multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
 				"A_", "B_", "C_", "D_");
 		
-		PCollection<KV<String, TableRow>> join1Table = finalResult.apply(ParDo.of(new ReadFromJoinResult3()));
+		PCollection<KV<String, TableRow>> tempPCollection2 = tempPCollection1.apply(ParDo.of(new ReadFromJoinResult3()));
 		
-		PCollection<TableRow> newFinalResult = combineTableDetails2(join1Table, cmpgnPCollection, "E_");
+		PCollection<TableRow> result = combineTableDetails2(tempPCollection2, cmpgnPCollection, "E_");
 		
 		
-		PCollection<TableRow> itsAMario = newFinalResult.apply(ParDo.named("Filter").of(new Filter()))
+		PCollection<TableRow> tempPCollection3 = result.apply(ParDo.named("Filter").of(new Filter()))
 				.apply(ParDo.named("Select1").of(new Select1()));
 		
-		PCollection<TableRow> iterablePCollection = operations(itsAMario);
-
-		
-		iterablePCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
-		pipeline.run();
+		PCollection<TableRow> resultPCollection = operations(tempPCollection3);
+		return resultPCollection;
 	}
+	
+//	public static void main(String[] args) {
+//
+//		Queries queries = new Queries();
+//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+//		Pipeline pipeline = Pipeline.create(options);
+//
+//		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
+//				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
+//				.apply(ParDo.named("FormatData1").of(new ExtractFromProspectCallLog_ProspectCall()));
+//
+//		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
+//				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
+//				.apply(ParDo.named("FormatData2").of(new ExtractFromProspectCallLog_ProspectCall()));
+//
+//		PCollection<KV<String, TableRow>> prospectPCollection = pipeline
+//				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
+//				.apply(ParDo.named("FormatData3").of(new ExtractFromProspect()));
+//
+//		PCollection<KV<String, TableRow>> answersPCollection = pipeline
+//				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
+//				.apply(ParDo.named("FormatData4").of(new ExtractFromAnswers()));
+//
+//		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
+//				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
+//				.apply(ParDo.named("FormatData5").of(new ExtractFromCMPGN()));
+//
+//		PCollection<TableRow> tempPCollection1 = multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
+//				"A_", "B_", "C_", "D_");
+//
+//		PCollection<KV<String, TableRow>> tempPCollection2 = tempPCollection1.apply(ParDo.of(new ReadFromJoinResult3()));
+//
+//		PCollection<TableRow> result = combineTableDetails2(tempPCollection2, cmpgnPCollection, "E_");
+//
+//
+//		PCollection<TableRow> tempPCollection3 = result.apply(ParDo.named("Filter").of(new Filter()))
+//				.apply(ParDo.named("Select1").of(new Select1()));
+//
+//		PCollection<TableRow> resultPCollection = operations(tempPCollection3);
+//
+//
+//		resultPCollection.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+//
+//		pipeline.run();
+//	}
 
 }

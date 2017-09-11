@@ -57,7 +57,6 @@ public class NumeroDos {
 	}
 	
 	private static class ExtractForJoin2 extends DoFn<TableRow, KV<String, TableRow>>{
-		
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow element = context.element();
@@ -78,7 +77,6 @@ public class NumeroDos {
 	}
 	
 	private static class ExtractForCMPGN extends DoFn<TableRow, KV<String, TableRow>>{
-		
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			context.output(KV.of((String)context.element().get("_id"), context.element()));

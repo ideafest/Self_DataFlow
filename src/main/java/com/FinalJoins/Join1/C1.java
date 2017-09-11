@@ -1,19 +1,11 @@
-package com.Practice.GottaTestThis;
+package com.FinalJoins.Join1;
 
 import com.Practice.Basic.Queries;
-import com.example.BigQuerySnippets;
-import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Field;
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -24,35 +16,9 @@ import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
-import java.util.List;
 import java.util.StringTokenizer;
 
-public class ForJoin3 {
-	
-	private static class ConvertToString extends DoFn<TableRow, String> {
-		@Override
-		public void processElement(ProcessContext context) throws Exception {
-			
-			context.output(context.element().toPrettyString());
-			
-		}
-	}
-	private static List<Field> getThemFields(String datasetName, String tableName){
-		BigQuery bigQuery = BigQueryOptions.getDefaultInstance().getService();
-		BigQuerySnippets bigQuerySnippets = new BigQuerySnippets(bigQuery);
-		Table table = bigQuerySnippets.getTable(datasetName,tableName);
-		List<Field> fieldSchemas = table.getDefinition().getSchema().getFields();
-		
-		return fieldSchemas;
-	}
-	
-	private static void setTheTableSchema(List<TableFieldSchema> fieldSchemaList, String tablePrefix, String datasetName, String tableName){
-		
-		for(Field field : getThemFields(datasetName, tableName)){
-			fieldSchemaList.add(new TableFieldSchema().setName(tablePrefix + field.getName()).setType(field.getType().getValue().toString()));
-		}
-	}
-	
+public class C1 {
 	private static class ReadFromTable1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -134,13 +100,14 @@ public class ForJoin3 {
 				freshRow.set("batch_date", getDate((String) element.get("A_createddate")));
 			}
 			
-			boolean aIsDirty = (boolean) freshRow.get("A_isdirty");
-			boolean aIsDeleted = (boolean) freshRow.get("A_isdeleted");
-			boolean bIsDirty = (boolean) freshRow.get("B_isdirty");
-			boolean bIsDeleted = (boolean) freshRow.get("B_isdeleted");
-			if (!aIsDirty && !aIsDeleted && !bIsDirty && !bIsDeleted){
-					context.output(freshRow);
-			}
+//			boolean aIsDirty = (boolean) element.get("A_isdirty");
+//			boolean aIsDeleted = (boolean) element.get("A_isdeleted");
+//			boolean bIsDirty = (boolean) element.get("B_isdirty");
+//			boolean bIsDeleted = (boolean) element.get("B_isdeleted");
+//			if (!aIsDirty && !aIsDeleted && !bIsDirty && !bIsDeleted){
+//			}
+			
+			context.output(freshRow);
 		}
 	}
 	
@@ -153,16 +120,17 @@ public class ForJoin3 {
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline) {
 		Queries queries = new Queries();
-		PCollection<KV<String, TableRow>> source1Table = pipeline
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.prospectCallLog))
 				.apply(ParDo.of(new ReadFromTable1()));
-		PCollection<KV<String, TableRow>> source2Table = pipeline
+		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
 				.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.prospectCall))
 				.apply(ParDo.of(new ReadFromTable2()));
 		
-		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table, "A_", "B_");
+		PCollection<TableRow> rowPCollection = combineTableDetails(prospectCallLogPCollection, prospectCallPCollection,
+				"A_", "B_");
 		
 		return rowPCollection.apply(ParDo.of(new Filter()));
 	}
-
+	
 }
