@@ -10,6 +10,7 @@ import com.google.cloud.dataflow.sdk.options.PipelineOptions;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
@@ -81,6 +82,16 @@ public class B3 {
 		}
 	}
 	
+	private static class GenerateKV extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			String key1 = (String) context.element().get("campaignId");
+			String key2 = (String) context.element().get("prospectCallId");
+			String key3 = (String) context.element().get("prospectInteractionSessionId");
+			context.output(KV.of(key1 + key2 + key3, context.element()));
+		}
+	}
+	
 	private static class SelectFromJoinResult extends DoFn<TableRow, TableRow>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -95,10 +106,11 @@ public class B3 {
 			String qaName = element.get("E_firstname") + " " + element.get("E_lastname");
 			freshRow.set("QAName", qaName);
 			freshRow.set("_id", element.get("A__id"));
-			freshRow.set("qaId", element.get("A_qaid"));
 			freshRow.set("campaignId", element.get("A_campaignid"));
 			freshRow.set("agentId", element.get("A_agentid"));
+			freshRow.set("qaId", element.get("A_qaid"));
 			freshRow.set("prospectCallId", element.get("A_prospectcallid"));
+			freshRow.set("prospectInteractionSessionId", element.get("A_prospectinteractionsessionid"));
 			freshRow.set("callDate", element.get("A_calldate"));
 			freshRow.set("callStartTime", element.get("A_callStartTime"));
 			freshRow.set("status", element.get("A_status"));
@@ -106,6 +118,7 @@ public class B3 {
 			freshRow.set("subStatus", element.get("A_substatus"));
 			freshRow.set("overallScore", element.get("A_overallscore"));
 			freshRow.set("feedbackDate", element.get("A_feedbackdate"));
+			freshRow.set("feedbackTime", element.get("A_feedbacktime"));
 			freshRow.set("lead_validation_notes", element.get("A_lead_validation_notes"));
 			freshRow.set("PHONEETIQUETTE_CUSTOMER_ENGAGEMENT", element.get("A_PHONEETIQUETTE_CUSTOMER_ENGAGEMENT"));
 			freshRow.set("PHONEETIQUETTE_PROFESSIONALISM", element.get("A_PHONEETIQUETTE_PROFESSIONALISM"));
@@ -151,10 +164,40 @@ public class B3 {
 		}
 	}
 	
-	private static void postOperations(PCollection<TableRow> rowPCollection){
+	private static PCollection<TableRow> postOperations(PCollection<TableRow> rowPCollection){
 		
 		PCollection<TableRow> filteredRow = rowPCollection.apply(ParDo.of(new SelectFromJoinResult()));
 		
+		PCollection<KV<String, TableRow>> generatedPCollection = filteredRow.apply(ParDo.of(new GenerateKV()));
+		
+		PCollection<KV<String, Iterable<TableRow>>> groupedPCollection = generatedPCollection.apply(GroupByKey.create());
+		
+		PCollection<TableRow> filteredPCollection = groupedPCollection
+				.apply(ParDo.of(new DoFn<KV<String, Iterable<TableRow>>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						
+						KV<String, Iterable<TableRow>> element = context.element();
+						Iterable<TableRow> rowIterable = element.getValue();
+						
+						String maxFeedbackTime = "";
+						
+						for(TableRow tableRow : rowIterable){
+							String updatedTime = (String)tableRow.get("feedbackTime");
+							if(updatedTime.compareTo(maxFeedbackTime) > 0){
+								maxFeedbackTime = updatedTime;
+							}
+						}
+						for(TableRow tableRow : rowIterable){
+							String updatedTime = (String)tableRow.get("feedbackTime");
+							if(maxFeedbackTime.equals(updatedTime)){
+								context.output(tableRow);
+							}
+						}
+					}
+				}));
+		
+		return filteredPCollection;
 		
 	}
 	
@@ -230,7 +273,9 @@ public class B3 {
 				.apply(BigQueryIO.Read.named("qa").from(queries.qa))
 				.apply(ParDo.of(new ExtractFromQa()));
 	
-		PCollection<TableRow> resultPCollection = joinOperation2(tempJoin2PCollection, qaPCollection, "E_");
+		PCollection<TableRow> finalJoinPCollection = joinOperation2(tempJoin2PCollection, qaPCollection, "E_");
+		
+		PCollection<TableRow> resultPCollection = postOperations(finalJoinPCollection);
 		
 		resultPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.to(options.getOutput()));

@@ -62,7 +62,7 @@ public class A1 {
 	
 	
 	
-	private static PCollection<TableRow> combineTableDetails(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
+	private static PCollection<TableRow> joinOperation1(PCollection<TableRow> stringPCollection1, PCollection<TableRow> stringPCollection2
 			, String table1Prefix, String table2Prefix){
 		
 		PCollection<KV<String, TableRow>> kvpCollection1 = stringPCollection1.apply(ParDo.named("FormatData1").of(new Extract1()));
@@ -164,7 +164,7 @@ public class A1 {
 		PCollection<TableRow> sourceTable1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from("vantage-167009:Learning.PCI_Temp"));
 		PCollection<TableRow> sourceTable2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status));
 		
-		PCollection<TableRow> resultPCollection = combineTableDetails(sourceTable1, sourceTable2, "A_", "B_");
+		PCollection<TableRow> resultPCollection = joinOperation1(sourceTable1, sourceTable2, "A_", "B_");
 		
 		PCollection<TableRow> result = operations(resultPCollection);
 		
