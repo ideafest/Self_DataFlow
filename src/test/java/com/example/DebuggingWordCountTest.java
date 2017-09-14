@@ -17,7 +17,6 @@
 package com.example;
 
 import com.google.common.io.Files;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;

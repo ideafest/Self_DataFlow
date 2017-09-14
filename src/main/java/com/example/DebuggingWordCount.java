@@ -16,7 +16,6 @@
 
 package com.example;
 
-import com.example.WordCount;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Default;
@@ -29,7 +28,6 @@ import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.Sum;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -22,7 +22,6 @@ import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
-import java.util.Iterator;
 import java.util.List;
 
 public class BasicTest1 {

@@ -1,7 +1,6 @@
 package com.Practice.GottaTestThis;
 
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;

@@ -11,9 +11,6 @@ import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CombineFnTest {
 	
 	private static class ExtractIntegerFields extends DoFn<TableRow, TableRow> {

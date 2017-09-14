@@ -15,11 +15,7 @@
 package com.example.common;
 
 import com.google.api.services.bigquery.model.TableSchema;
-import com.google.cloud.dataflow.sdk.options.DataflowPipelineOptions;
-import com.google.cloud.dataflow.sdk.options.Default;
-import com.google.cloud.dataflow.sdk.options.DefaultValueFactory;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
+import com.google.cloud.dataflow.sdk.options.*;
 
 /**
  * Options that can be used to configure BigQuery tables in Dataflow examples.

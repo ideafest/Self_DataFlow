@@ -1,7 +1,6 @@
 package com.example;
 
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.Timestamp;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
