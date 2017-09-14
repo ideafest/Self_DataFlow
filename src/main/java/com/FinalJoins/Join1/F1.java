@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Practice.Basic.Joins;
 import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
@@ -431,7 +432,7 @@ public class F1 {
 
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
-		
+		Joins joins = new Joins();
 		Queries queries = new Queries();
 
 		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = pipeline
@@ -442,7 +443,7 @@ public class F1 {
 				.apply(BigQueryIO.Read.named("pci_responseAttributes").from(queries.pciResponseAttributes))
 				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
 		
-		PCollection<TableRow> tempJoin1 = joinOperation1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
+		PCollection<TableRow> tempJoin1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
 				"A_", "B_");
 		
 		PCollection<KV<String, TableRow>> tempPCollection1 = tempJoin1.apply(ParDo.of(new ExtractFromTempJoin1()));
@@ -451,7 +452,7 @@ public class F1 {
 				.apply(BigQueryIO.Read.named("prospectCall").from(queries.pciProspect))
 				.apply(ParDo.of(new ExtractFromProspectCall()));
 		
-		PCollection<TableRow> tempJoin2 = joinOperation2(tempPCollection1, prospectCallPCollection, "C_");
+		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, prospectCallPCollection, "C_");
 		
 		
 		PCollection<KV<String, TableRow>> tempPCollection2 = tempJoin2.apply(ParDo.of(new ExtractFromTempJoin2()));
@@ -460,7 +461,7 @@ public class F1 {
 				.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
-		PCollection<TableRow> finalJoinResult = joinOperation2(tempPCollection2, cmpgnPCollection, "D_");
+		PCollection<TableRow> finalJoinResult = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "D_");
 		
 		PCollection<TableRow> resultPCollection = postOperations(finalJoinResult);
 		

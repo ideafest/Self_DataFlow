@@ -1,0 +1,214 @@
+package com.Practice.Basic;
+
+import com.google.api.services.bigquery.model.TableRow;
+import com.google.cloud.bigquery.Field;
+import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
+import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
+import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
+import com.google.cloud.dataflow.sdk.values.KV;
+import com.google.cloud.dataflow.sdk.values.PCollection;
+import com.google.cloud.dataflow.sdk.values.TupleTag;
+
+import java.util.List;
+
+public class Joins {
+	
+	public PCollection<String> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
+	                                                  PCollection<KV<String, TableRow>> kvpCollection2,
+	                                                  List<Field> fieldMetaDataList1,
+	                                                  String table1Prefix, String table2Prefix){
+		
+		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> gbkResultPCollection = KeyedPCollectionTuple
+				.of(tupleTag1, kvpCollection1)
+				.and(tupleTag2, kvpCollection2)
+				.apply(CoGroupByKey.create());
+		
+		PCollection<String> resultPCollection = gbkResultPCollection
+				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, String>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2);
+						
+						TableRow freshRow;
+						
+						if(rowIterator1.spliterator().getExactSizeIfKnown() != 0) {
+							for (TableRow tableRow1 : rowIterator1) {
+								if(rowIterator2.spliterator().getExactSizeIfKnown() != 0) {
+									for (TableRow tableRow2 : rowIterator2) {
+										freshRow = new TableRow();
+										for (String field : tableRow1.keySet()) {
+											freshRow.set(table1Prefix + field, tableRow1.get(field));
+										}
+										
+										for (String field : tableRow2.keySet()) {
+											freshRow.set(table2Prefix + field, tableRow2.get(field));
+										}
+										context.output(freshRow.toPrettyString());
+									}
+								}
+								else{
+									freshRow = new TableRow();
+									for (String field : tableRow1.keySet()) {
+										freshRow.set(table1Prefix + field, tableRow1.get(field));
+									}
+									
+									for (Field field : fieldMetaDataList1) {
+										freshRow.set(table2Prefix + field.getName(), "null");
+									}
+									context.output(freshRow.toPrettyString());
+								}
+							}
+						}
+					}
+				}));
+		return resultPCollection;
+	}
+	
+	public PCollection<TableRow> innerJoin1(PCollection<KV<String, TableRow>> stringPCollection1,
+	                                        PCollection<KV<String, TableRow>> stringPCollection2,
+	                                        String table1Prefix, String table2Prefix){
+		
+		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
+				.of(tupleTag1, stringPCollection1)
+				.and(tupleTag2, stringPCollection2)
+				.apply(CoGroupByKey.create());
+		
+		PCollection<TableRow> resultPCollection = pCollection
+				.apply(ParDo.named("Result1").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
+						
+						TableRow tableRow;
+						for(TableRow tableRow1 : rowIterable1){
+							
+							for(TableRow tableRow2 : rowIterable2){
+								
+								tableRow = new TableRow();
+								
+								for(String field: tableRow1.keySet()){
+									tableRow.set(table1Prefix + field, tableRow1.get(field));
+								}
+								
+								for(String field : tableRow2.keySet()){
+									tableRow.set(table2Prefix + field, tableRow2.get(field));
+								}
+								context.output(tableRow);
+							}
+						}
+					}
+				}));
+		return resultPCollection;
+	}
+	
+	public PCollection<TableRow> innerJoin2(PCollection<KV<String, TableRow>> stringPCollection1,
+	                                        PCollection<KV<String, TableRow>> stringPCollection2,
+											String table2Prefix){
+		
+		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
+				.of(tupleTag1, stringPCollection1)
+				.and(tupleTag2, stringPCollection2)
+				.apply(CoGroupByKey.create());
+		
+		PCollection<TableRow> resultPCollection = pCollection
+				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
+						
+						for(TableRow tableRow1 : rowIterable1){
+							
+							for(TableRow tableRow2 : rowIterable2){
+								
+								for(String field : tableRow2.keySet()){
+									tableRow1.set(table2Prefix + field, tableRow2.get(field));
+								}
+								context.output(tableRow1);
+							}
+						}
+					}
+				}));
+		return resultPCollection;
+	}
+	
+	public PCollection<TableRow> multiCombine(PCollection<KV<String, TableRow>> stringPCollection1,
+	                                          PCollection<KV<String, TableRow>> stringPCollection2,
+	                                          PCollection<KV<String, TableRow>> stringPCollection3,
+	                                          PCollection<KV<String, TableRow>> stringPCollection4,
+	                                          String table1Prefix, String table2Prefix,
+	                                          String table3Prefix, String table4Prefix){
+		
+		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag3 = new TupleTag<>();
+		final TupleTag<TableRow> tupleTag4 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
+				.of(tupleTag1, stringPCollection1)
+				.and(tupleTag2, stringPCollection2)
+				.and(tupleTag3, stringPCollection3)
+				.and(tupleTag4, stringPCollection4)
+				.apply(CoGroupByKey.create());
+		
+		PCollection<TableRow> resultPCollection = pCollection
+				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
+						Iterable<TableRow> rowIterable3 = element.getValue().getAll(tupleTag3);
+						Iterable<TableRow> rowIterable4 = element.getValue().getAll(tupleTag4);
+						
+						TableRow tableRow;
+						
+						for(TableRow tableRow1 : rowIterable1){
+							for(TableRow tableRow2 : rowIterable2){
+								for(TableRow tableRow3 : rowIterable3){
+									for (TableRow tableRow4 : rowIterable4){
+										tableRow = new TableRow();
+										for(String field : tableRow1.keySet()){
+											tableRow.set(table1Prefix + field, tableRow1.get(field));
+										}
+										for(String field : tableRow2.keySet()){
+											tableRow.set(table2Prefix + field, tableRow2.get(field));
+										}
+										for(String field : tableRow3.keySet()){
+											tableRow.set(table3Prefix + field, tableRow3.get(field));
+										}
+										for(String field : tableRow4.keySet()){
+											tableRow.set(table4Prefix + field, tableRow4.get(field));
+										}
+										context.output(tableRow);
+									}
+								}
+							}
+						}
+					}
+				}));
+		
+		
+		return resultPCollection;
+	}
+}

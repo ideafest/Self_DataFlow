@@ -3,6 +3,7 @@ com/Practice/Basic/BasicTest8$ReadFromJoin2.class
 com/Practice/Basic/BasicTest3$ReadFromTable1.class
 com/example/Something/FieldArrayList.class
 com/FinalJoins/Join1/D1.class
+com/Practice/Basic/LeftOuterJoinTest.class
 com/Practice/Joins/Join1$ConvertToString.class
 com/example/SideViewTrial.class
 com/example/ExportFromBQuery.class
@@ -12,6 +13,7 @@ com/Practice/Basic/BasicTest11$Options.class
 com/Practice/Joins/Join3$ReadFromTable1.class
 com/Practice/GottaTestThis/NumeroDos$ConvertToString.class
 com/Practice/Basic/BasicTest9$Options.class
+com/Practice/Basic/LeftOuterJoinTest$Options.class
 com/example/common/PubsubFileInjector.class
 BQuery_v2$ExtractAndSend.class
 com/example/BQJoin$2.class
@@ -43,6 +45,7 @@ com/Practice/GottaTestThis/ForJoin2$Extract3.class
 com/example/BQuery$doThatOperation$1.class
 com/Practice/GottaTestThis/NumeroUno$Options.class
 com/example/BQJoin$Options.class
+com/FinalJoins/Join1/B3$2.class
 com/example/ExportFromTable.class
 com/example/BQJoin.class
 com/example/WindowedWordCount.class
@@ -183,6 +186,7 @@ com/example/MinimalWordCount$1.class
 com/example/common/DataflowExampleUtils.class
 com/Practice/Basic/BasicTest8$FinalFieldTableRow.class
 com/Practice/Basic/BasicTest9_v2$2.class
+com/FinalJoins/Join1/B3$GenerateKV.class
 com/Practice/GottaTestThis/ForJoin2$1.class
 com/example/WordCountTemplate$WordCountOptions$OutputFactory.class
 com/Practice/Basic/BasicTest8$1.class
@@ -202,6 +206,7 @@ com/Practice/GottaTestThis/ForJoin2$FinalFieldTableRow.class
 com/Practice/BaseJoin1$4.class
 com/example/LocalWordCount.class
 com/Practice/Basic/BasicTest8$2.class
+com/FinalJoins/Join1/B3$SelectFromJoinResult.class
 com/example/Something/GottaTestThis.class
 com/Practice/Basic/BasicTest7$ReadFromJoin2.class
 com/Practice/Basic/BasicTest9_v2$Options.class
@@ -446,6 +451,7 @@ com/FinalJoins/Join1/A3$ExtractFromA2.class
 com/Practice/Basic/BasicTest11.class
 com/FinalJoins/Join1/G1$2.class
 com/example/BQJoin_2$ExtractFromTable1.class
+com/Practice/Basic/LeftOuterJoinTest$ExtractFromTemp1.class
 com/FinalJoins/Join1/B2$ExtractFromE1_F1.class
 com/example/BigQueryTornadoes_v2$FormatCountsFn.class
 com/example/OrderByTest$GenerateKV.class
@@ -526,6 +532,7 @@ com/Practice/Joins/Join7_v2$Filter.class
 com/Practice/Joins/Join7$Select1.class
 com/Practice/GottaTestThis/ForJoin6$1.class
 com/Practice/BaseJoin1$ExtractFromJoin3.class
+com/Practice/Basic/LeftOuterJoinTest$ExtractFromTemp2.class
 com/Practice/Basic/BasicTest9$ReadFromTable1.class
 com/Practice/Basic/Queries.class
 com/FinalJoins/Join1/E1$ReadFromJoin4.class
@@ -568,3 +575,4 @@ com/Practice/Basic/BasicTest7New$ReadFromTable3.class
 com/Practice/GottaTestThis/ForJoin6$3.class
 com/Practice/Basic/BasicTest5$ReadFromTable3.class
 com/Practice/GottaTestThis/ForJoin7$ReadFromTable5.class
+com/Practice/Basic/LeftOuterJoinTest$1.class

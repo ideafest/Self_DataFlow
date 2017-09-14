@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Practice.Basic.Joins;
 import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
@@ -90,51 +91,6 @@ public class A2 {
 		}
 	}
 	
-	private static PCollection<TableRow> joinOperation1(PCollection<KV<String, TableRow>> kvpCollection1,
-	                                                    PCollection<KV<String, TableRow>> kvpCollection2,
-	                                                    String table1Prefix, String table2Prefix){
-		
-		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, kvpCollection1)
-				.and(tupleTag2, kvpCollection2)
-				.apply(CoGroupByKey.<String>create());
-		
-		
-		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						TableRow tableRow;
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
-								
-								tableRow = new TableRow();
-								
-								for(String field: tableRow1.keySet()){
-									tableRow.set(table1Prefix + field, tableRow1.get(field));
-								}
-								
-								for(String field : tableRow2.keySet()){
-									tableRow.set(table2Prefix + field, tableRow2.get(field));
-								}
-								context.output(tableRow);
-							}
-						}
-					}
-				}));
-		
-		return resultPCollection;
-	}
-	
 	private static PCollection<TableRow> postOperations(PCollection<TableRow> afterJoin){
 		PCollection<KV<String, TableRow>> kvpCollection = afterJoin.apply(ParDo.of(new GenerateKV()));
 		
@@ -178,14 +134,14 @@ public class A2 {
 	}
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
-		
+		Joins joins = new Joins();
 		A1 a1 = new A1();
 		B1 b1 = new B1();
 		
 		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
 		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
 		
-		PCollection<TableRow> tempPCollection = joinOperation1(a1PCollection, b1PCollection, "A_", "B_");
+		PCollection<TableRow> tempPCollection = joins.innerJoin1(a1PCollection, b1PCollection, "A_", "B_");
 		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
 		return a2PCollection;
 	}

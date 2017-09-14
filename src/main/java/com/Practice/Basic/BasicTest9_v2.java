@@ -328,7 +328,7 @@ public class BasicTest9_v2 {
 	
 	
 	static PCollection<TableRow> combineTableDetails2(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
-			,List<Field> fieldMetaDataList2, String table2Prefix){
+			, String table2Prefix){
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -351,8 +351,8 @@ public class BasicTest9_v2 {
 							
 							for(TableRow tableRow2 : rowIterable2){
 								
-								for(Field field : fieldMetaDataList2){
-									tableRow1.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
+								for(String field : tableRow2.keySet()){
+									tableRow1.set(table2Prefix + field, tableRow2.get(field));
 								}
 								context.output(tableRow1);
 							}
@@ -368,8 +368,6 @@ public class BasicTest9_v2 {
 	                                          PCollection<KV<String, TableRow>> stringPCollection2,
 	                                          PCollection<KV<String, TableRow>> stringPCollection3,
 	                                          PCollection<KV<String, TableRow>> stringPCollection4,
-	                                          List<Field> fieldMetaDataList1, List<Field> fieldMetaDataList2,
-	                                          List<Field> fieldMetaDataList3, List<Field> fieldMetaDataList4,
 	                                          String table1Prefix, String table2Prefix,
 	                                          String table3Prefix, String table4Prefix){
 		
@@ -403,17 +401,17 @@ public class BasicTest9_v2 {
 								for(TableRow tableRow3 : rowIterable3){
 									for (TableRow tableRow4 : rowIterable4){
 										tableRow = new TableRow();
-										for(Field field : fieldMetaDataList1){
-											tableRow.set(table1Prefix + field.getName(), tableRow1.get(field.getName()));
+										for(String field : tableRow1.keySet()){
+											tableRow.set(table1Prefix + field, tableRow1.get(field));
 										}
-										for(Field field : fieldMetaDataList2){
-											tableRow.set(table2Prefix + field.getName(), tableRow2.get(field.getName()));
+										for(String field : tableRow2.keySet()){
+											tableRow.set(table2Prefix + field, tableRow2.get(field));
 										}
-										for(Field field : fieldMetaDataList3){
-											tableRow.set(table3Prefix + field.getName(), tableRow3.get(field.getName()));
+										for(String field : tableRow3.keySet()){
+											tableRow.set(table3Prefix + field, tableRow3.get(field));
 										}
-										for(Field field : fieldMetaDataList4){
-											tableRow.set(table4Prefix + field.getName(), tableRow4.get(field.getName()));
+										for(String field : tableRow4.keySet()){
+											tableRow.set(table4Prefix + field,  tableRow4.get(field));
 										}
 										context.output(tableRow);
 									}
@@ -434,6 +432,16 @@ public class BasicTest9_v2 {
 		@Validation.Required
 		String getOutput();
 		void setOutput(String output);
+		
+		@Description("Start time for query")
+		@Validation.Required
+		String startTime();
+		void setStartTime(String startTme);
+		
+		@Description("End time for query")
+		@Validation.Required
+		String endTime();
+		void setEndTime(String endTime);
 	}
 	
 	public static void main(String[] args) {
@@ -456,36 +464,35 @@ public class BasicTest9_v2 {
 //		setTheTableSchema(fieldSchemaList, "D_","Xtaas", "answers");
 //		setTheTableSchema(fieldSchemaList, "E_","Xtaas", "CMPGN");
 //		TableSchema tableSchema = new TableSchema().setFields(fieldSchemaList);
+
+		PCollection<KV<String, TableRow>> source1Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
+				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+
+		PCollection<KV<String, TableRow>> source2Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
+				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+
+		PCollection<KV<String, TableRow>> source3Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
+				.apply(ParDo.named("FormatData3").of(new ReadFromTable3()));
+
+		PCollection<KV<String, TableRow>> source4Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
+				.apply(ParDo.named("FormatData4").of(new ReadFromTable4()));
+
+		PCollection<KV<String, TableRow>> source5Table = pipeline
+				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
+				.apply(ParDo.named("FormatData5").of(new ReadFromTable5()));
+
+		PCollection<TableRow> finalResult = multiCombine(source1Table, source2Table, source3Table, source4Table,
+				"A_", "B_", "C_", "D_");
+
+		PCollection<KV<String, TableRow>> join1Table = finalResult.apply(ParDo.of(new ReadFromJoinResult3()));
+
+		PCollection<TableRow> newFinalResult = combineTableDetails2(join1Table, source5Table, "E_");
 //
-//		PCollection<KV<String, TableRow>> source1Table = pipeline
-//				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_prospectCallLog))
-//				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
-//
-//		PCollection<KV<String, TableRow>> source2Table = pipeline
-//				.apply(BigQueryIO.Read.named("Reader2").from(queries.temp_prospectCall))
-//				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
-//
-//		PCollection<KV<String, TableRow>> source3Table = pipeline
-//				.apply(BigQueryIO.Read.named("Reader3").fromQuery(queries.prospect))
-//				.apply(ParDo.named("FormatData3").of(new ReadFromTable3()));
-//
-//		PCollection<KV<String, TableRow>> source4Table = pipeline
-//				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.answers))
-//				.apply(ParDo.named("FormatData4").of(new ReadFromTable4()));
-//
-//		PCollection<KV<String, TableRow>> source5Table = pipeline
-//				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
-//				.apply(ParDo.named("FormatData5").of(new ReadFromTable5()));
-//
-//		PCollection<TableRow> finalResult = multiCombine(source1Table, source2Table, source3Table, source4Table,
-//				fieldMetaDataList1, fieldMetaDataList2, fieldMetaDataList3, fieldMetaDataList4,
-//				"A_", "B_", "C_", "D_");
-//
-//		PCollection<KV<String, TableRow>> join1Table = finalResult.apply(ParDo.of(new ReadFromJoinResult3()));
-//
-//		PCollection<TableRow> newFinalResult = combineTableDetails2(join1Table, source5Table, fieldMetaDataList5, "E_");
-		
-		PCollection<TableRow> newFinalResult = pipeline.apply(BigQueryIO.Read.from("vantage-167009:Learning.JoinTest9TempResult1"));
+//		PCollection<TableRow> newFinalResult = pipeline.apply(BigQueryIO.Read.from("vantage-167009:Learning.JoinTest9TempResult1"));
 		
 		PCollection<TableRow> itsAMario = newFinalResult.apply(ParDo.named("Filter").of(new Filter()))
 				.apply(ParDo.named("Select1").of(new Select1()));

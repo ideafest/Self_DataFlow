@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Practice.Basic.Joins;
 import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
@@ -199,87 +200,6 @@ public class E1 {
 		}
 	}
 	
-	
-	static PCollection<TableRow> joinOperation1(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
-			, String table1Prefix, String table2Prefix){
-		
-		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, stringPCollection1)
-				.and(tupleTag2, stringPCollection2)
-				.apply(CoGroupByKey.create());
-		
-		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result1").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						TableRow tableRow;
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
-								
-								tableRow = new TableRow();
-								
-								for(String field: tableRow1.keySet()){
-									tableRow.set(table1Prefix + field, tableRow1.get(field));
-								}
-								
-								for(String field : tableRow2.keySet()){
-									tableRow.set(table2Prefix + field, tableRow2.get(field));
-								}
-								context.output(tableRow);
-							}
-						}
-					}
-				}));
-		
-		
-		return resultPCollection;
-	}
-	
-	static PCollection<TableRow> joinOperation2(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
-			, String table2Prefix){
-		
-		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, stringPCollection1)
-				.and(tupleTag2, stringPCollection2)
-				.apply(CoGroupByKey.create());
-		
-		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
-								
-								for(String field : tableRow2.keySet()){
-									tableRow1.set(table2Prefix + field, tableRow2.get(field));
-								}
-								context.output(tableRow1);
-							}
-						}
-					}
-				}));
-		
-		
-		return resultPCollection;
-	}
 	
 	private static PCollection<TableRow> postOperations(PCollection<TableRow> rowPCollection){
 		PCollection<TableRow> firstResult = rowPCollection
@@ -520,7 +440,7 @@ public class E1 {
 	}
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
-		
+		Joins joins= new Joins();
 		Queries queries = new Queries();
 		
 		//pci_feedbackresponselist(A) with pci_responseattributes(B) {A._id = B._id & A.INDEX = B.index}
@@ -532,7 +452,7 @@ public class E1 {
 				.apply(BigQueryIO.Read.named("Reader2").from(queries.pciResponseAttributes))
 				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
 		
-		PCollection<TableRow> joinResult1 = joinOperation1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
+		PCollection<TableRow> joinResult1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
 				"A_", "B_");
 		
 		//with PC_PCI(P) {B._id = P._id}
@@ -543,7 +463,7 @@ public class E1 {
 				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.PC_PCI))
 				.apply(ParDo.named("FormatData4").of(new ReadFromTable2()));
 		
-		PCollection<TableRow> joinResult2 = joinOperation2(joinTemp1, pcpciPCollection,
+		PCollection<TableRow> joinResult2 = joins.innerJoin2(joinTemp1, pcpciPCollection,
 				 "C_");
 		
 		//with qafeedbackformattributes(E) {B.attribute = E.attribute}
@@ -554,7 +474,7 @@ public class E1 {
 				.apply(BigQueryIO.Read.named("Reader6").from(queries.qaFeedbackFormAttributes))
 				.apply(ParDo.named("FormatData6").of(new ReadFromTable3()));
 		
-		PCollection<TableRow> joinResult3 = joinOperation2(joinTemp2, qaFeedbackFormAttributesPCollection,
+		PCollection<TableRow> joinResult3 = joins.innerJoin2(joinTemp2, qaFeedbackFormAttributesPCollection,
 				 "D_");
 		
 		//with pci_qafeedback(F) {A._id = F._id}
@@ -565,7 +485,7 @@ public class E1 {
 				.apply(BigQueryIO.Read.named("Reader8").from(queries.pciQaFeedback))
 				.apply(ParDo.named("FormatData8").of(new ReadFromTable4()));
 		
-		PCollection<TableRow> joinTemp4 = joinOperation2(joinTemp3, pciQaFeedbackPCollection,
+		PCollection<TableRow> joinTemp4 = joins.innerJoin2(joinTemp3, pciQaFeedbackPCollection,
 				 "E_");
 		
 		//with CMPGN(G) {P.campaignid = G._id}
@@ -576,7 +496,7 @@ public class E1 {
 				.apply(BigQueryIO.Read.named("Reader10").fromQuery(queries.CMPGN))
 				.apply(ParDo.named("FormatData10").of(new ReadFromTable5()));
 		
-		PCollection<TableRow> finalResult = joinOperation2(source9Table, cmpgnPCollection,
+		PCollection<TableRow> finalResult = joins.innerJoin2(source9Table, cmpgnPCollection,
 				 "F_");
 		
 		

@@ -246,6 +246,16 @@ public class BasicTest11 {
 		@Validation.Required
 		String getOutput();
 		void setOutput(String output);
+		
+		@Description("Start time for query")
+		@Validation.Required
+		String getStartTime();
+		void setStartTime(String startTme);
+		
+		@Description("End time for query")
+		@Validation.Required
+		String getEndTime();
+		void setEndTime(String endTime);
 	}
 	
 	public static void main(String[] args) {
@@ -254,34 +264,34 @@ public class BasicTest11 {
 		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
 		Pipeline pipeline = Pipeline.create(options);
 		
+		String PC_PCI = "select * from [vantage-167009:Xtaas.PC_PCI] " +
+				"where updateddate > '" +options.getStartTime()+"'  and updateddate < '" +options.getEndTime()+"'";
+		
+		
 		PCollection<KV<String, TableRow>> source1Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").from(queries.temp_PCPCI))
-				.apply(ParDo.named("FormatData1").of(new Extract1()));
+				.apply(BigQueryIO.Read.named("PC_PCI").fromQuery(PC_PCI))
+				.apply(ParDo.named("FormattedPC_PCI").of(new Extract1()));
 		
 		PCollection<KV<String, TableRow>> source2Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").from(queries.pciProspect))
-				.apply(ParDo.named("FormatData2").of(new Extract1()));
+				.apply(BigQueryIO.Read.named("PC_Prospect").from(queries.pciProspect))
+				.apply(ParDo.named("FormattedPC_Prospect").of(new Extract1()));
 		
 		
 		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table,
 				"A_", "B_");
 		
 		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
-				.apply(ParDo.named("FormatData3").of(new Extract2()));
+				.apply(ParDo.named("FormattedJoin").of(new Extract2()));
 		
 		PCollection<KV<String, TableRow>> source3Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").from(queries.master_status))
-				.apply(ParDo.named("FormatData4").of(new Extract3()));
+				.apply(BigQueryIO.Read.named("Master_Status").from(queries.master_status))
+				.apply(ParDo.named("FormattedMaster_Status").of(new Extract3()));
 		
 		PCollection<TableRow> rowPCollection2 = combineTableDetails2(joinResult1, source3Table,
 				 "C_");
 		
-		
-		rowPCollection2.apply(ParDo.of(new Filter()))
-				.apply(ParDo.of(new FinalFieldTableRow()))
-				.apply(ParDo.of(new ConvertToString()))
+		rowPCollection2.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
 		
 
 		pipeline.run();

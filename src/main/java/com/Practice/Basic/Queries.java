@@ -81,4 +81,12 @@ public class Queries {
 	
 	public final String agent = "vantage-167009:Xtaas.agent";
 	public final String qa = "vantage-167009:Xtaas.qa";
+
+	public final String PCI_Time= "SELECT\n" +
+			"  *\n" +
+			"FROM\n" +
+			"  [vantage-167009:Xtaas.PC_PCI]\n" +
+			"WHERE\n" +
+			"  updateddate > '2017-09-08 12:14:25.232'\n" +
+			"  AND updateddate < '2017-09-08 12:30:25.232'";
 }

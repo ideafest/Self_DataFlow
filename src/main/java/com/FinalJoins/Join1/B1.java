@@ -1,17 +1,14 @@
 package com.FinalJoins.Join1;
 
+import com.Practice.Basic.Joins;
 import com.Practice.Basic.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
-import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
-import com.google.cloud.dataflow.sdk.transforms.join.CoGroupByKey;
-import com.google.cloud.dataflow.sdk.transforms.join.KeyedPCollectionTuple;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
-import com.google.cloud.dataflow.sdk.values.TupleTag;
 
 import java.util.StringTokenizer;
 
@@ -146,89 +143,9 @@ public class B1 {
 		}
 	}
 	
-	static PCollection<TableRow> combineTableDetails(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
-			, String table1Prefix, String table2Prefix){
-		
-		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, stringPCollection1)
-				.and(tupleTag2, stringPCollection2)
-				.apply(CoGroupByKey.create());
-		
-		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result1").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						TableRow tableRow;
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
-								
-								tableRow = new TableRow();
-								
-								for(String field: tableRow1.keySet()){
-									tableRow.set(table1Prefix + field, tableRow1.get(field));
-								}
-								
-								for(String field : tableRow2.keySet()){
-									tableRow.set(table2Prefix + field, tableRow2.get(field));
-								}
-								context.output(tableRow);
-							}
-						}
-					}
-				}));
-		
-		
-		return resultPCollection;
-	}
-	
-	static PCollection<TableRow> combineTableDetails2(PCollection<KV<String, TableRow>> stringPCollection1, PCollection<KV<String, TableRow>> stringPCollection2
-			, String table2Prefix){
-		
-		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
-		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
-		
-		PCollection<KV<String, CoGbkResult>> pCollection = KeyedPCollectionTuple
-				.of(tupleTag1, stringPCollection1)
-				.and(tupleTag2, stringPCollection2)
-				.apply(CoGroupByKey.create());
-		
-		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						KV<String, CoGbkResult> element = context.element();
-						
-						Iterable<TableRow> rowIterable1 = element.getValue().getAll(tupleTag1);
-						Iterable<TableRow> rowIterable2 = element.getValue().getAll(tupleTag2);
-						
-						for(TableRow tableRow1 : rowIterable1){
-							
-							for(TableRow tableRow2 : rowIterable2){
-								
-								for(String field : tableRow2.keySet()){
-									tableRow1.set(table2Prefix + field, tableRow2.get(field));
-								}
-								context.output(tableRow1);
-							}
-						}
-					}
-				}));
-		
-		
-		return resultPCollection;
-	}
-	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
 		
+		Joins joins= new Joins();
 		Queries queries = new Queries();
 		
 		PCollection<KV<String, TableRow>> source1Table = pipeline
@@ -240,7 +157,7 @@ public class B1 {
 				.apply(ParDo.named("FormatData2").of(new Extract1()));
 		
 		
-		PCollection<TableRow> rowPCollection = combineTableDetails(source1Table, source2Table,
+		PCollection<TableRow> rowPCollection = joins.innerJoin1(source1Table, source2Table,
 				"A_", "B_");
 		
 		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
@@ -250,7 +167,7 @@ public class B1 {
 				.apply(BigQueryIO.Read.named("Reader4").from(queries.master_status))
 				.apply(ParDo.named("FormatData4").of(new Extract3()));
 		
-		PCollection<TableRow> rowPCollection2 = combineTableDetails2(joinResult1, source3Table,
+		PCollection<TableRow> rowPCollection2 = joins.innerJoin2(joinResult1, source3Table,
 				"C_");
 		
 		
