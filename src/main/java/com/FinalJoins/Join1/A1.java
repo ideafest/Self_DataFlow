@@ -1,7 +1,7 @@
 package com.FinalJoins.Join1;
 
-import com.Practice.Basic.Joins;
-import com.Practice.Basic.Queries;
+import com.Essential.Joins;
+import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
@@ -110,7 +110,7 @@ public class A1 {
 		Queries queries = new Queries();
 		Joins joins = new Joins();
 		
-		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").from("vantage-167009:Learning.PCI_Temp"))
+		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(queries.PCI_Time))
 				.apply(ParDo.named("FormatData1").of(new Extract1()));
 		
 		PCollection<KV<String, TableRow>> kvpCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status))

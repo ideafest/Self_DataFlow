@@ -1,6 +1,6 @@
 package com.Practice.Joins;
 
-import com.Practice.Basic.Queries;
+import com.Essential.Queries;
 import com.example.BigQuerySnippets;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableRow;

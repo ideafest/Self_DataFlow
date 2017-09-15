@@ -1,6 +1,6 @@
 package com.Practice;
 
-import com.Practice.Basic.Queries;
+import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;

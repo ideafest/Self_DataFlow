@@ -1,4 +1,4 @@
-package com.Practice.Basic;
+package com.Essential;
 
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.bigquery.Field;
@@ -11,11 +11,12 @@ import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Joins {
+public class Joins implements Serializable {
 	
-	public PCollection<String> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
+	public PCollection<TableRow> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
 	                                                  PCollection<KV<String, TableRow>> kvpCollection2,
 	                                                  List<Field> fieldMetaDataList1,
 	                                                  String table1Prefix, String table2Prefix){
@@ -28,8 +29,8 @@ public class Joins {
 				.and(tupleTag2, kvpCollection2)
 				.apply(CoGroupByKey.create());
 		
-		PCollection<String> resultPCollection = gbkResultPCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, String>() {
+		PCollection<TableRow> resultPCollection = gbkResultPCollection
+				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -51,7 +52,7 @@ public class Joins {
 										for (String field : tableRow2.keySet()) {
 											freshRow.set(table2Prefix + field, tableRow2.get(field));
 										}
-										context.output(freshRow.toPrettyString());
+										context.output(freshRow);
 									}
 								}
 								else{
@@ -63,7 +64,7 @@ public class Joins {
 									for (Field field : fieldMetaDataList1) {
 										freshRow.set(table2Prefix + field.getName(), "null");
 									}
-									context.output(freshRow.toPrettyString());
+									context.output(freshRow);
 								}
 							}
 						}
@@ -211,4 +212,6 @@ public class Joins {
 		
 		return resultPCollection;
 	}
+	
+	
 }

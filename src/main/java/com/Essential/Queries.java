@@ -1,4 +1,4 @@
-package com.Practice.Basic;
+package com.Essential;
 
 public class Queries {
 	
@@ -86,6 +86,11 @@ public class Queries {
 			"  *\n" +
 			"FROM\n" +
 			"  [vantage-167009:Xtaas.PC_PCI]\n" +
+			"WHERE\n" +
+			"  updateddate > '2017-09-08 12:14:25.232'\n" +
+			"  AND updateddate < '2017-09-08 12:30:25.232'";
+	
+	public final String dncList_Time = "SELECT * FROM [vantage-167009:Xtaas.dnclist] \n" +
 			"WHERE\n" +
 			"  updateddate > '2017-09-08 12:14:25.232'\n" +
 			"  AND updateddate < '2017-09-08 12:30:25.232'";

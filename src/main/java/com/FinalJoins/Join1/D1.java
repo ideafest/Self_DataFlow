@@ -1,7 +1,7 @@
 package com.FinalJoins.Join1;
 
-import com.Practice.Basic.Joins;
-import com.Practice.Basic.Queries;
+import com.Essential.Joins;
+import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
@@ -108,7 +108,7 @@ public class D1 {
 		Queries queries = new Queries();
 		
 		PCollection<KV<String, TableRow>> dncListPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source1Reader").from(queries.dncList))
+				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.dncList_Time))
 				.apply(ParDo.of(new ReadFromDncList()));
 		
 		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline

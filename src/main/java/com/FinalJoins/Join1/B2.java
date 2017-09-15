@@ -1,6 +1,6 @@
 package com.FinalJoins.Join1;
 
-import com.Practice.Basic.Joins;
+import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.options.Description;

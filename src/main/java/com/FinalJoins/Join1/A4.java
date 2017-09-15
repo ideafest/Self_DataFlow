@@ -29,10 +29,8 @@ public class A4 {
 		void setOutput(String output);
 	}
 	
-	public static void main(String[] args) {
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-		Pipeline pipeline = Pipeline.create(options);
-	
+	public PCollection<TableRow> runIt(Pipeline pipeline){
+		
 		A3 a3 = new A3();
 		D1 d1 = new D1();
 		
@@ -41,10 +39,26 @@ public class A4 {
 		
 		PCollection<TableRow> resultPCollection = PCollectionList.of(a3PCollection).and(d1PCollection).apply(Flatten.pCollections());
 		
-		resultPCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+		return resultPCollection;
 		
-		pipeline.run();
 	}
+	
+//	public static void main(String[] args) {
+//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+//		Pipeline pipeline = Pipeline.create(options);
+//
+//		A3 a3 = new A3();
+//		D1 d1 = new D1();
+//
+//		PCollection<TableRow> a3PCollection = a3.runIt(pipeline);
+//		PCollection<TableRow> d1PCollection = d1.runIt(pipeline);
+//
+//		PCollection<TableRow> resultPCollection = PCollectionList.of(a3PCollection).and(d1PCollection).apply(Flatten.pCollections());
+//
+//		resultPCollection.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+//
+//		pipeline.run();
+//	}
 
 }
