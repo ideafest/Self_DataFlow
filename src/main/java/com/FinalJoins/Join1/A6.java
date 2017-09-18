@@ -35,6 +35,24 @@ public class A6 {
 		}
 	}
 	
+	private static class ExtractFromB4 extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key1 = (String) element.get("D_code");
+			context.output(KV.of(key1, element));
+		}
+	}
+	
+	private static class ExtractFromTemp1PCollection extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key1 = (String) element.get("A_status");
+			context.output(KV.of(key1, element));
+		}
+	}
+	
 	private static class ExtractFromG1 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -51,25 +69,42 @@ public class A6 {
 	}
 
 	
+	
 	public static void main(String[] args) {
+		
+		
 		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
 		Pipeline pipeline = Pipeline.create(options);
 		Joins joins = new Joins();
-		A5 a5 = new A5();
 		
+		Init init = new Init();
+		init.initTables(pipeline);
+		
+		A5 a5 = new A5();
 		G1 g1 = new G1();
 		
-		PCollection<KV<String, TableRow>> a5PCollection = a5.runIt(pipeline)
+		PCollection<KV<String, TableRow>> a5PCollection = a5.runIt(init)
 				.apply(ParDo.of(new ExtractFromA5()));
 		
-		PCollection<KV<String, TableRow>> g1PCollection = g1.runIt(pipeline)
+		PCollection<KV<String, TableRow>> g1PCollection = g1.runIt(init)
 				.apply(ParDo.of(new ExtractFromG1()));
 		
-		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_");
+		PCollection<TableRow> temp1PCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_");
+		
+		
+		
+		B4 b4 = new B4();
+		PCollection<KV<String, TableRow>> b4PCollection = b4.runIt(init)
+				.apply(ParDo.of(new ExtractFromB4()));
+		
+		PCollection<KV<String, TableRow>> temp2PCollection = temp1PCollection.apply(ParDo.of(new ExtractFromTemp1PCollection()));
+		
+		PCollection<TableRow> resultPCollection = joins.leftOuterJoin(temp2PCollection, b4PCollection);
 		
 		resultPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
+		pipeline.run();
 	}
 	
 }

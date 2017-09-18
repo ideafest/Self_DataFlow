@@ -122,46 +122,19 @@ public class A2 {
 		PCollection<TableRow> resutPCollection = stringPCollection.apply(ParDo.of(new SelectA2()));
 		return resutPCollection;
 	}
+
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
 		A1 a1 = new A1();
 		B1 b1 = new B1();
 		
-		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
-		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
+		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(init).apply(ParDo.of(new ExtractFromA1_B1()));
+		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(init).apply(ParDo.of(new ExtractFromA1_B1()));
 		
 		PCollection<TableRow> tempPCollection = joins.innerJoin1(a1PCollection, b1PCollection, "A_", "B_");
 		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
 		return a2PCollection;
 	}
 	
-	public static void main(String[] args) {
-
-		Joins joins = new Joins();
-		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
-		Pipeline pipeline = Pipeline.create(options);
-
-		A1 a1 = new A1();
-		B1 b1 = new B1();
-
-		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
-		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
-
-		PCollection<TableRow> tempPCollection = joins.innerJoin1(a1PCollection, b1PCollection, "A_", "B_");
-		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
-
-		a2PCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-
-		pipeline.run();
-	}
-
 }

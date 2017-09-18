@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
 import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
@@ -435,62 +436,55 @@ public class E1 {
 		return iterablePCollection;
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins= new Joins();
-		Queries queries = new Queries();
 		
 		//pci_feedbackresponselist(A) with pci_responseattributes(B) {A._id = B._id & A.INDEX = B.index}
-		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").from(queries.pciFeedbackResponseList))
-				.apply(ParDo.named("FormatData1").of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
+				.apply(ParDo.of(new ReadFromTable1()));
 		
-		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").from(queries.pciResponseAttributes))
-				.apply(ParDo.named("FormatData2").of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
+				.apply(ParDo.of(new ReadFromTable1()));
 		
 		PCollection<TableRow> joinResult1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
 				"A_", "B_");
 		
 		//with PC_PCI(P) {B._id = P._id}
 		PCollection<KV<String, TableRow>> joinTemp1 = joinResult1
-				.apply(ParDo.named("FormatData3").of(new ReadFromJoin1()));
+				.apply(ParDo.of(new ReadFromJoin1()));
 		
-		PCollection<KV<String, TableRow>> pcpciPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").fromQuery(queries.PC_PCI))
-				.apply(ParDo.named("FormatData4").of(new ReadFromTable2()));
+		PCollection<KV<String, TableRow>> pcpciPCollection = init.getPC_PCI()
+				.apply(ParDo.of(new ReadFromTable2()));
 		
 		PCollection<TableRow> joinResult2 = joins.innerJoin2(joinTemp1, pcpciPCollection,
 				 "C_");
 		
 		//with qafeedbackformattributes(E) {B.attribute = E.attribute}
 		PCollection<KV<String, TableRow>> joinTemp2 = joinResult2
-				.apply(ParDo.named("FormatData5").of(new ReadFromJoin2()));
+				.apply(ParDo.of(new ReadFromJoin2()));
 		
-		PCollection<KV<String, TableRow>> qaFeedbackFormAttributesPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader6").from(queries.qaFeedbackFormAttributes))
-				.apply(ParDo.named("FormatData6").of(new ReadFromTable3()));
+		PCollection<KV<String, TableRow>> qaFeedbackFormAttributesPCollection = init.getQaFeedbackFormAttributes()
+				.apply(ParDo.of(new ReadFromTable3()));
 		
 		PCollection<TableRow> joinResult3 = joins.innerJoin2(joinTemp2, qaFeedbackFormAttributesPCollection,
 				 "D_");
 		
 		//with pci_qafeedback(F) {A._id = F._id}
 		PCollection<KV<String, TableRow>> joinTemp3 = joinResult3
-				.apply(ParDo.named("FormatData7").of(new ReadFromJoin3()));
+				.apply(ParDo.of(new ReadFromJoin3()));
 		
-		PCollection<KV<String, TableRow>> pciQaFeedbackPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader8").from(queries.pciQaFeedback))
-				.apply(ParDo.named("FormatData8").of(new ReadFromTable4()));
+		PCollection<KV<String, TableRow>> pciQaFeedbackPCollection = init.getPci_qaFeedback()
+				.apply(ParDo.of(new ReadFromTable4()));
 		
 		PCollection<TableRow> joinTemp4 = joins.innerJoin2(joinTemp3, pciQaFeedbackPCollection,
 				 "E_");
 		
 		//with CMPGN(G) {P.campaignid = G._id}
 		PCollection<KV<String, TableRow>> source9Table = joinTemp4
-				.apply(ParDo.named("FormatData9").of(new ReadFromJoin4()));
+				.apply(ParDo.of(new ReadFromJoin4()));
 		
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader10").fromQuery(queries.CMPGN))
-				.apply(ParDo.named("FormatData10").of(new ReadFromTable5()));
+		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
+				.apply(ParDo.of(new ReadFromTable5()));
 		
 		PCollection<TableRow> finalResult = joins.innerJoin2(source9Table, cmpgnPCollection,
 				 "F_");

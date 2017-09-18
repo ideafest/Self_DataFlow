@@ -193,28 +193,26 @@ public class B3 {
 		
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Queries queries = new Queries();
 		Joins joins = new Joins();
 		B2 b2 = new B2();
 		
-		PCollection<KV<String, TableRow>> b2PCollection = b2.runIt(pipeline).apply(ParDo.of(new ExtractFromB2()));
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
+		PCollection<KV<String, TableRow>> b2PCollection = b2.runIt(init).apply(ParDo.of(new ExtractFromB2()));
+		
+		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
 		PCollection<TableRow> tempJoin1 = joins.innerJoin2(b2PCollection, cmpgnPCollection, "C_");
 		
 		PCollection<KV<String, TableRow>> tempJoin1PCollection = tempJoin1.apply(ParDo.of(new ExtractTempJoin1()));
-		PCollection<KV<String, TableRow>> agentPCollection = pipeline
-				.apply(BigQueryIO.Read.named("agent").from(queries.agent))
+		PCollection<KV<String, TableRow>> agentPCollection = init.getAgent()
 				.apply(ParDo.of(new ExtractFromAgent()));
 		
 		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempJoin1PCollection, agentPCollection, "D_");
 		
 		PCollection<KV<String, TableRow>> tempJoin2PCollection = tempJoin2.apply(ParDo.of(new ExtractTempJoin2()));
-		PCollection<KV<String, TableRow>> qaPCollection = pipeline
-				.apply(BigQueryIO.Read.named("qa").from(queries.qa))
+		PCollection<KV<String, TableRow>> qaPCollection = init.getQa()
 				.apply(ParDo.of(new ExtractFromQa()));
 		
 		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(tempJoin2PCollection, qaPCollection, "E_");
@@ -223,49 +221,6 @@ public class B3 {
 		
 		return resultPCollection;
 	}
-	
-//	interface Options extends PipelineOptions {
-//		@Description("Output path for String")
-//		@Validation.Required
-//		String getOutput();
-//		void setOutput(String output);
-//	}
-//
-//	public static void main(String[] args) {
-//		Joins joins = new Joins();
-//		Queries queries = new Queries();
-//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-//		Pipeline pipeline = Pipeline.create(options);
-//
-//		B2 b2 = new B2();
-//
-//		PCollection<KV<String, TableRow>> b2PCollection = b2.runIt(pipeline).apply(ParDo.of(new ExtractFromB2()));
-//		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-//				.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
-//				.apply(ParDo.of(new ExtractFromCMPGN()));
-//
-//		PCollection<TableRow> tempJoin1 = joins.innerJoin2(b2PCollection, cmpgnPCollection, "C_");
-//
-//		PCollection<KV<String, TableRow>> tempJoin1PCollection = tempJoin1.apply(ParDo.of(new ExtractTempJoin1()));
-//		PCollection<KV<String, TableRow>> agentPCollection = pipeline
-//				.apply(BigQueryIO.Read.named("agent").from(queries.agent))
-//				.apply(ParDo.of(new ExtractFromAgent()));
-//
-//		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempJoin1PCollection, agentPCollection, "D_");
-//
-//		PCollection<KV<String, TableRow>> tempJoin2PCollection = tempJoin2.apply(ParDo.of(new ExtractTempJoin2()));
-//		PCollection<KV<String, TableRow>> qaPCollection = pipeline
-//				.apply(BigQueryIO.Read.named("qa").from(queries.qa))
-//				.apply(ParDo.of(new ExtractFromQa()));
-//
-//		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(tempJoin2PCollection, qaPCollection, "E_");
-//
-//		PCollection<TableRow> resultPCollection = postOperations(finalJoinPCollection);
-//
-//		resultPCollection.apply(ParDo.of(new ConvertToString()))
-//				.apply(TextIO.Write.to(options.getOutput()));
-//
-//		pipeline.run();
-//	}
+
 
 }

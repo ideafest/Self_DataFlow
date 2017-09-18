@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
 import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
@@ -7,6 +8,7 @@ import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
+import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -72,14 +74,13 @@ public class C1 {
 		void setOutput(String output);
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline) {
-		Queries queries = new Queries();
+	public PCollection<TableRow> runIt(Init init) {
+
 		Joins joins = new Joins();
-		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.prospectCallLog))
+		
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = init.getProspectCallLog()
 				.apply(ParDo.of(new ReadFromTable1()));
-		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.prospectCall))
+		PCollection<KV<String, TableRow>> prospectCallPCollection = init.getProspectCall()
 				.apply(ParDo.of(new ReadFromTable2()));
 		
 		PCollection<TableRow> rowPCollection = joins.innerJoin1(prospectCallLogPCollection, prospectCallPCollection,

@@ -333,93 +333,22 @@ public class G1 {
 	}
 	
 	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
-	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
-		Queries queries = new Queries();
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
-		JobOptions jobOptions = (JobOptions) pipeline.getOptions();
 		
-		String prospectCallLog = "SELECT a._id _id, a._class _class, a.status status, b.createddate createddate, a.createdby createdby, \n" +
-				"a.updateddate updateddate, a.updatedby updatedby, a.version version, a.isdeleted isdeleted , a.callbackdate callbackdate, \n" +
-				"a.isdirty isdirty\n" +
-				"   FROM ( SELECT row_number()\n" +
-				"          OVER( \n" +
-				"          PARTITION BY prospectcallid\n" +
-				"          ORDER BY updateddate ) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, \n" +
-				"          updatedby, version, isdeleted, callbackdate, isdirty\n" +
-				"           FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) a\n" +
-				"   JOIN ( SELECT derived_table1.prospectcallid, max(derived_table1.rnum) AS rnum, \n" +
-				"   max(derived_table1.updateddate) AS updateddate, min(derived_table1.createddate) AS createddate\n" +
-				"           FROM ( SELECT row_number()\n" +
-				"                  OVER( \n" +
-				"                  PARTITION BY prospectcallid\n" +
-				"                  ORDER BY updateddate) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, \n" +
-				"                  updatedby, version, isdeleted, callbackdate, isdirty\n" +
-				"                   FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) derived_table1\n" +
-				"          GROUP BY derived_table1.prospectcallid) b ON a.prospectcallid = b.prospectcallid \n" +
-				"          AND a.updateddate = b.updateddate \n" +
-				"          AND a.rnum = b.rnum\n" +
-				"where a.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and a.updateddate < '" + jobOptions.getEndTime() + "'";
-		
-		
-		String prospectCall = "SELECT a._id _id, a.prospectcallid prospectcallid, a.twiliocallsid twiliocallsid, a.agentid agentid, \n" +
-				"a.previousprospectcallid previousprospectcallid, a.deliveredassetid deliveredassetid, \n" +
-				"a.dispositionstatus dispositionstatus, a.substatus substatus, a.qastatus qastatus, a.campaignid campaignid, \n" +
-				"a.callretrycount callretrycount, a.callstarttime callstarttime, a.callbacktime callbacktime, a.callbackhours callbackhours, \n" +
-				"a.callduration callduration, a.outboundnumber outboundnumber, a.recordingurl recordingurl, \n" +
-				"a.prospecthandleduration prospecthandleduration, a.telcoduration telcoduration, \n" +
-				"a.prospectinteractionsessionid prospectinteractionsessionid, a.isdeleted isdeleted, \n" +
-				"a.latestprospectidentitychangelogid latestprospectidentitychangelogid, a.isdirty isdirty\n" +
-				"FROM [vantage-167009:Xtaas.pci_prospectcall] a\n" +
-				"JOIN \n" +
-				"[vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
-		
-		
-		String prospect = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.status status, a.source source, a.sourceid sourceid, \n" +
-				"a.campaigncontactid campaigncontactid, a.prefix, a.firstname firstname, a.lastname lastname, a.suffix suffix, \n" +
-				"a.company company, a.title title, a.department department, a.phone phone, a.industry industry, a.industrylist industrylist, \n" +
-				"a.email email, a.addressline1 addressline1, a.addressline2 addressline2, a.city city, a.zipcode zipcode, a.country country, \n" +
-				"a.extension extension, a.statecode statecode, a.optedin optedin, a.callbacktimeinms callbacktimeinms, a.isdeleted isdeleted,\n" +
-				"a.isdirty isdirty \n" +
-				"   FROM [vantage-167009:Xtaas.pci_prospect] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
-		
-		String answers = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.index index, a.answerskey answerskey, a.answersvalue answersvalue,\n" +
-				"a.isdeleted isdeleted, a.isdirty isdirty\n" +
-				"   FROM [vantage-167009:Xtaas.pci_answers] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
-		
-		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").fromQuery(prospectCallLog))
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = init.getProspectCallLog()
 				.apply(ParDo.named("FormatData1").of(new ExtractFromProspectCallLog_ProspectCall()));
 		
-		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").fromQuery(prospectCall))
+		PCollection<KV<String, TableRow>> prospectCallPCollection = init.getProspectCall()
 				.apply(ParDo.named("FormatData2").of(new ExtractFromProspectCallLog_ProspectCall()));
 		
-		PCollection<KV<String, TableRow>> prospectPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader3").fromQuery(prospect))
+		PCollection<KV<String, TableRow>> prospectPCollection =init.getProspect()
 				.apply(ParDo.named("FormatData3").of(new ExtractFromProspect()));
 		
-		PCollection<KV<String, TableRow>> answersPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").fromQuery(answers))
+		PCollection<KV<String, TableRow>> answersPCollection = init.getAnswers()
 				.apply(ParDo.named("FormatData4").of(new ExtractFromAnswers()));
 		
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
+		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.named("FormatData5").of(new ExtractFromCMPGN()));
 
 		PCollection<TableRow> tempPCollection1 = joins.multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
@@ -437,108 +366,4 @@ public class G1 {
 		return resultPCollection;
 	}
 	
-	public static void main(String[] args) {
-
-		Queries queries = new Queries();
-		Joins joins = new Joins();
-		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
-		Pipeline pipeline = Pipeline.create(options);
-		
-		String prospectCallLog = "SELECT a._id _id, a._class _class, a.status status, b.createddate createddate, a.createdby createdby, \n" +
-				"a.updateddate updateddate, a.updatedby updatedby, a.version version, a.isdeleted isdeleted , a.callbackdate callbackdate, \n" +
-				"a.isdirty isdirty\n" +
-				"   FROM ( SELECT row_number()\n" +
-				"          OVER( \n" +
-				"          PARTITION BY prospectcallid\n" +
-				"          ORDER BY updateddate ) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, \n" +
-				"          updatedby, version, isdeleted, callbackdate, isdirty\n" +
-				"           FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) a\n" +
-				"   JOIN ( SELECT derived_table1.prospectcallid, max(derived_table1.rnum) AS rnum, \n" +
-				"   max(derived_table1.updateddate) AS updateddate, min(derived_table1.createddate) AS createddate\n" +
-				"           FROM ( SELECT row_number()\n" +
-				"                  OVER( \n" +
-				"                  PARTITION BY prospectcallid\n" +
-				"                  ORDER BY updateddate) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, \n" +
-				"                  updatedby, version, isdeleted, callbackdate, isdirty\n" +
-				"                   FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) derived_table1\n" +
-				"          GROUP BY derived_table1.prospectcallid) b ON a.prospectcallid = b.prospectcallid \n" +
-				"          AND a.updateddate = b.updateddate \n" +
-				"          AND a.rnum = b.rnum\n" +
-				"where a.updateddate > '" + options.getStartTime() + "'" +
-				"and a.updateddate < '" + options.getEndTime() + "'";
-		
-		
-		String prospectCall = "SELECT a._id _id, a.prospectcallid prospectcallid, a.twiliocallsid twiliocallsid, a.agentid agentid, \n" +
-				"a.previousprospectcallid previousprospectcallid, a.deliveredassetid deliveredassetid, \n" +
-				"a.dispositionstatus dispositionstatus, a.substatus substatus, a.qastatus qastatus, a.campaignid campaignid, \n" +
-				"a.callretrycount callretrycount, a.callstarttime callstarttime, a.callbacktime callbacktime, a.callbackhours callbackhours, \n" +
-				"a.callduration callduration, a.outboundnumber outboundnumber, a.recordingurl recordingurl, \n" +
-				"a.prospecthandleduration prospecthandleduration, a.telcoduration telcoduration, \n" +
-				"a.prospectinteractionsessionid prospectinteractionsessionid, a.isdeleted isdeleted, \n" +
-				"a.latestprospectidentitychangelogid latestprospectidentitychangelogid, a.isdirty isdirty\n" +
-				"FROM [vantage-167009:Xtaas.pci_prospectcall] a\n" +
-				"JOIN \n" +
-				"[vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + options.getStartTime() + "'" +
-				"and b.updateddate < '" + options.getEndTime() + "'";
-		
-		
-		String prospect = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.status status, a.source source, a.sourceid sourceid, \n" +
-				"a.campaigncontactid campaigncontactid, a.prefix, a.firstname firstname, a.lastname lastname, a.suffix suffix, \n" +
-				"a.company company, a.title title, a.department department, a.phone phone, a.industry industry, a.industrylist industrylist, \n" +
-				"a.email email, a.addressline1 addressline1, a.addressline2 addressline2, a.city city, a.zipcode zipcode, a.country country, \n" +
-				"a.extension extension, a.statecode statecode, a.optedin optedin, a.callbacktimeinms callbacktimeinms, a.isdeleted isdeleted,\n" +
-				"a.isdirty isdirty \n" +
-				"   FROM [vantage-167009:Xtaas.pci_prospect] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + options.getStartTime() + "'" +
-				"and b.updateddate < '" + options.getEndTime() + "'";
-		
-		String answers = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.index index, a.answerskey answerskey, a.answersvalue answersvalue,\n" +
-				"a.isdeleted isdeleted, a.isdirty isdirty\n" +
-				"   FROM [vantage-167009:Xtaas.pci_answers] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + options.getStartTime() + "'" +
-				"and b.updateddate < '" + options.getEndTime() + "'";
-		
-		PCollection<KV<String, TableRow>> prospectCallLogPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").fromQuery(prospectCallLog))
-				.apply(ParDo.named("FormatData1").of(new ExtractFromProspectCallLog_ProspectCall()));
-
-		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").fromQuery(prospectCall))
-				.apply(ParDo.named("FormatData2").of(new ExtractFromProspectCallLog_ProspectCall()));
-
-		PCollection<KV<String, TableRow>> prospectPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader3").fromQuery(prospect))
-				.apply(ParDo.named("FormatData3").of(new ExtractFromProspect()));
-
-		PCollection<KV<String, TableRow>> answersPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").fromQuery(answers))
-				.apply(ParDo.named("FormatData4").of(new ExtractFromAnswers()));
-
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Reader5").fromQuery(queries.CMPGN))
-				.apply(ParDo.named("FormatData5").of(new ExtractFromCMPGN()));
-
-		PCollection<TableRow> tempPCollection1 = joins.multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
-				"A_", "B_", "C_", "D_");
-
-		PCollection<KV<String, TableRow>> tempPCollection2 = tempPCollection1.apply(ParDo.of(new ReadFromJoinResult3()));
-
-		PCollection<TableRow> result = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "E_");
-
-
-		PCollection<TableRow> tempPCollection3 = result.apply(ParDo.named("Filter").of(new Filter()))
-				.apply(ParDo.named("Select1").of(new Select1()));
-
-		PCollection<TableRow> resultPCollection = operations(tempPCollection3);
-
-
-		resultPCollection.apply(ParDo.of(new ConvertToString()))
-				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-
-		pipeline.run();
-	}
-
 }

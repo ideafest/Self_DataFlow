@@ -30,37 +30,18 @@ public class B2 {
 		void setOutput(String output);
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
 		
 		E1 e1 = new E1();
 		F1 f1 = new F1();
 		
-		PCollection<KV<String, TableRow>> pCollection1 = e1.runIt(pipeline).apply(ParDo.of(new ExtractFromE1_F1()));
-		PCollection<KV<String, TableRow>> pCollection2 = f1.runIt(pipeline).apply(ParDo.of(new ExtractFromE1_F1()));
+		PCollection<KV<String, TableRow>> pCollection1 = e1.runIt(init).apply(ParDo.of(new ExtractFromE1_F1()));
+		PCollection<KV<String, TableRow>> pCollection2 = f1.runIt(init).apply(ParDo.of(new ExtractFromE1_F1()));
 		
 		PCollection<TableRow> finalResultPCollection = joins.innerJoin1(pCollection1, pCollection2, "A_", "B_");
 		
 		return finalResultPCollection;
 	}
 	
-//	public static void main(String[] args) {
-//
-//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-//		Pipeline pipeline = Pipeline.create(options);
-//
-//		E1 e1 = new E1();
-//		F1 f1 = new F1();
-//
-//		PCollection<KV<String, TableRow>> pCollection1 = e1.runIt(pipeline).apply(ParDo.of(new ExtractFromE1_F1()));
-//		PCollection<KV<String, TableRow>> pCollection2 = f1.runIt(pipeline).apply(ParDo.of(new ExtractFromE1_F1()));
-//
-//		PCollection<TableRow> finalResultPCollection = joinOperation(pCollection1, pCollection2);
-//
-//		finalResultPCollection.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-//
-//		pipeline.run();
-//
-//	}
-
 }

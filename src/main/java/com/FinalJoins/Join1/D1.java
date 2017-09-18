@@ -104,22 +104,13 @@ public class D1 {
 		void setOutput(String output);
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
-		JobOptions jobOptions = (JobOptions) pipeline.getOptions();
-		Queries queries = new Queries();
 		
-		String dncList = "SELECT * FROM [vantage-167009:Xtaas.dnclist]" +
-				"WHERE" +
-				"  updateddate > '" + jobOptions.getStartTime() + "'" +
-				"  AND updateddate < '" + jobOptions.getEndTime() + "'";
-		
-		PCollection<KV<String, TableRow>> dncListPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(dncList))
+		PCollection<KV<String, TableRow>> dncListPCollection = init.getDncList()
 				.apply(ParDo.of(new ReadFromDncList()));
 		
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source2Reader").fromQuery(queries.CMPGN))
+		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ReadFromCMPGN()));
 		
 		PCollection<TableRow> tempPCollection = joins.innerJoin1(dncListPCollection, cmpgnPCollection, "A_", "B_");

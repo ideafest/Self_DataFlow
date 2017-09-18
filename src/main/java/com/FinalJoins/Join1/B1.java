@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
 import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
@@ -143,33 +144,30 @@ public class B1 {
 		}
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		
 		Joins joins= new Joins();
-		Queries queries = new Queries();
-		
-		PCollection<KV<String, TableRow>> source1Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader1").fromQuery(queries.PCI_Time))
-				.apply(ParDo.named("FormatData1").of(new Extract1()));
-		
-		PCollection<KV<String, TableRow>> source2Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader2").from(queries.pciProspect))
-				.apply(ParDo.named("FormatData2").of(new Extract1()));
 		
 		
-		PCollection<TableRow> rowPCollection = joins.innerJoin1(source1Table, source2Table,
+		
+		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
+				.apply(ParDo.of(new Extract1()));
+		
+		PCollection<KV<String, TableRow>> pciprospect = init.getPci_prospect()
+				.apply(ParDo.of(new Extract1()));
+		
+		
+		PCollection<TableRow> rowPCollection = joins.innerJoin1(pcpci, pciprospect,
 				"A_", "B_");
 		
 		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
-				.apply(ParDo.named("FormatData3").of(new Extract2()));
+				.apply(ParDo.of(new Extract2()));
 		
-		PCollection<KV<String, TableRow>> source3Table = pipeline
-				.apply(BigQueryIO.Read.named("Reader4").from(queries.master_status))
-				.apply(ParDo.named("FormatData4").of(new Extract3()));
+		PCollection<KV<String, TableRow>> master_status = init.getMaster_status()
+				.apply(ParDo.of(new Extract3()));
 		
-		PCollection<TableRow> rowPCollection2 = joins.innerJoin2(joinResult1, source3Table,
+		PCollection<TableRow> rowPCollection2 = joins.innerJoin2(joinResult1, master_status,
 				"C_");
-		
 		
 		return rowPCollection2.apply(ParDo.of(new Filter()))
 				.apply(ParDo.of(new FinalFieldTableRow()));

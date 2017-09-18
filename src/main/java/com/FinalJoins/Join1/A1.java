@@ -115,23 +115,17 @@ public class A1 //extends Job {
 		
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 //
-		JobOptions jobOptions = (JobOptions) pipeline.getOptions();
-		Queries queries = new Queries();
 		Joins joins = new Joins();
 
-		String PC_PCI = "SELECT * FROM [vantage-167009:Xtaas.PC_PCI]\n" +
-				"\tWHERE  updateddate > '"+ jobOptions.getStartTime()
-				+"' AND updateddate < '"+ jobOptions.getEndTime() +"'";
-
-		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(PC_PCI))
+		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
 				.apply(ParDo.named("FormatData1").of(new Extract1()));
 
-		PCollection<KV<String, TableRow>> kvpCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status))
+		PCollection<KV<String, TableRow>> masterstatus = init.getMaster_status()
 				.apply(ParDo.named("FormatData2").of(new Extract2()));
 
-		PCollection<TableRow> resultPCollection = joins.innerJoin1(kvpCollection1, kvpCollection2, "A_", "B_");
+		PCollection<TableRow> resultPCollection = joins.innerJoin1(pcpci, masterstatus, "A_", "B_");
 
 		PCollection<TableRow> result = postOperations(resultPCollection);
 

@@ -426,16 +426,13 @@ public class F1 {
 	
 
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
-		Queries queries = new Queries();
 
-		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = pipeline
-				.apply(BigQueryIO.Read.named("pci_feedbackResponseList").from(queries.pciFeedbackResponseList))
+		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
 				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
 		
-		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = pipeline
-				.apply(BigQueryIO.Read.named("pci_responseAttributes").from(queries.pciResponseAttributes))
+		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
 				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
 		
 		PCollection<TableRow> tempJoin1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
@@ -443,17 +440,15 @@ public class F1 {
 		
 		PCollection<KV<String, TableRow>> tempPCollection1 = tempJoin1.apply(ParDo.of(new ExtractFromTempJoin1()));
 		
-		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
-				.apply(BigQueryIO.Read.named("pciProspectCall").from(queries.pciProspectCall))
+		PCollection<KV<String, TableRow>> pciProspectCallPCollection = init.getPci_prospectCall()
 				.apply(ParDo.of(new ExtractFromProspectCall()));
 		
-		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, prospectCallPCollection, "C_");
+		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, pciProspectCallPCollection, "C_");
 		
 		
 		PCollection<KV<String, TableRow>> tempPCollection2 = tempJoin2.apply(ParDo.of(new ExtractFromTempJoin2()));
 		
-		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline
-				.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
+		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
 		PCollection<TableRow> finalJoinResult = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "D_");

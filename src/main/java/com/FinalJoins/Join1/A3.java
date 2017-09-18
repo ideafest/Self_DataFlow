@@ -112,15 +112,16 @@ public class A3 {
 		void setOutput(String output);
 	}
 	
-	public PCollection<TableRow> runIt(Pipeline pipeline){
+	public PCollection<TableRow> runIt(Init init){
 		
 		Queries queries = new Queries();
 		Joins joins = new Joins();
 		
 		A2 a2 = new A2();
 		
-		PCollection<KV<String, TableRow>> a2PCollection = a2.runIt(pipeline).apply(ParDo.of(new ExtractFromA2()));
-		PCollection<KV<String, TableRow>> cmpgnTable = pipeline.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
+		PCollection<KV<String, TableRow>> a2PCollection = a2.runIt(init).apply(ParDo.of(new ExtractFromA2()));
+		
+		PCollection<KV<String, TableRow>> cmpgnTable = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
 		PCollection<TableRow> tempPCollection1 = joins.innerJoin1(a2PCollection, cmpgnTable, "A_", "B_");
@@ -128,7 +129,8 @@ public class A3 {
 		C1 c1 = new C1();
 		
 		PCollection<KV<String, TableRow>> a3PCollection = tempPCollection1.apply(ParDo.of(new ExtractFromTempColl()));
-		PCollection<KV<String, TableRow>> c1PCollection = c1.runIt(pipeline).apply(ParDo.of(new ExtractFromC1()));
+		
+		PCollection<KV<String, TableRow>> c1PCollection = c1.runIt(init).apply(ParDo.of(new ExtractFromC1()));
 		
 		PCollection<TableRow> tempPCollection2 = joins.innerJoin2(a3PCollection, c1PCollection, "C_");
 		
@@ -136,33 +138,6 @@ public class A3 {
 		return resultPCollection;
 	}
 	
-//	public static void main(String[] args) {
-//		Queries queries = new Queries();
-//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-//		Pipeline pipeline = Pipeline.create(options);
-//
-//		A2 a2 = new A2();
-//
-//		PCollection<KV<String, TableRow>> a2PCollection = a2.runIt(pipeline).apply(ParDo.of(new ExtractFromA2()));
-//		PCollection<KV<String, TableRow>> cmpgnTable = pipeline.apply(BigQueryIO.Read.named("CMPGN").fromQuery(queries.CMPGN))
-//				.apply(ParDo.of(new ExtractFromCMPGN()));
-//
-//		PCollection<TableRow> tempPCollection1 = joinOperation1(a2PCollection, cmpgnTable, "A_", "B_");
-//
-//		C1 c1 = new C1();
-//
-//		PCollection<KV<String, TableRow>> a3PCollection = tempPCollection1.apply(ParDo.of(new ExtractFromTempColl()));
-//		PCollection<KV<String, TableRow>> c1PCollection = c1.runIt(pipeline).apply(ParDo.of(new ExtractFromC1()));
-//
-//		PCollection<TableRow> tempPCollection2 = joinOperation2(a3PCollection, c1PCollection, "C_");
-//
-//		PCollection<TableRow> resultPCollection = tempPCollection2.apply(ParDo.of(new SelectFromTempColl2()));
-//
-//		resultPCollection.apply(ParDo.of(new ConvertToString()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-//
-//		pipeline.run();
-//
-//	}
+
 	
 }

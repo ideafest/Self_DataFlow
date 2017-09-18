@@ -17,7 +17,66 @@ import java.util.List;
 
 public class Joins implements Serializable {
 	
-	public static PCollection<TableRow> leftOuterJoin1(PCollection<KV<String, TableRow>> kvpCollection1,
+	
+	public PCollection<TableRow> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
+	                                            PCollection<KV<String, TableRow>> kvpCollection2){
+		
+		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> gbkResultPCollection = KeyedPCollectionTuple
+				.of(tupleTag1, kvpCollection1)
+				.and(tupleTag2, kvpCollection2)
+				.apply(CoGroupByKey.create());
+		
+		List<String> fieldList = new ArrayList<>();
+		
+		PCollection<TableRow> resultPCollection = gbkResultPCollection
+				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2);
+						
+						TableRow freshRow;
+						
+						if(rowIterator1.spliterator().getExactSizeIfKnown() != 0) {
+							for (TableRow tableRow1 : rowIterator1) {
+								if(rowIterator2.spliterator().getExactSizeIfKnown() != 0) {
+									for (TableRow tableRow2 : rowIterator2) {
+										freshRow = new TableRow();
+										for (String field : tableRow1.keySet()) {
+											freshRow.set(field, tableRow1.get(field));
+										}
+										
+										for (String field : tableRow2.keySet()) {
+											freshRow.set(field, tableRow2.get(field));
+											fieldList.add(field);
+										}
+										context.output(freshRow);
+									}
+								}
+								else{
+									freshRow = new TableRow();
+									for (String field : tableRow1.keySet()) {
+										freshRow.set(field, tableRow1.get(field));
+									}
+									
+									for (String field : fieldList) {
+										freshRow.set(field, "null");
+									}
+									context.output(freshRow);
+								}
+							}
+						}
+					}
+				}));
+		return resultPCollection;
+	}
+	
+	public PCollection<TableRow> leftOuterJoin1(PCollection<KV<String, TableRow>> kvpCollection1,
 	                                                   PCollection<KV<String, TableRow>> kvpCollection2,
 	                                                   String table1Prefix, String table2Prefix){
 		

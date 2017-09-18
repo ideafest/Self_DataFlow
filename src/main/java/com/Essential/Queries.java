@@ -94,4 +94,7 @@ public class Queries {
 			"WHERE\n" +
 			"  updateddate > '2017-09-08 12:14:25.232'\n" +
 			"  AND updateddate < '2017-09-08 12:30:25.232'";
+	
+	public final String masterDispositionStatus = "vantage-167009:Xtaas.master_status";
+	public final String masterSubStatus = "vantage-167009:Xtaas.master_substatus";
 }
