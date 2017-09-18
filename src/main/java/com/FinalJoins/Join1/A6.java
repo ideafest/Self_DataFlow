@@ -1,18 +1,24 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.options.Description;
-import com.google.cloud.dataflow.sdk.options.PipelineOptions;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
-import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
 public class A6 {
+	
+	private static class ConvertToString extends DoFn<TableRow, String> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			context.output(context.element().toPrettyString());
+		}
+	}
 	
 	private static class ExtractFromA5 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
@@ -29,7 +35,7 @@ public class A6 {
 		}
 	}
 	
-	private static class ExtractFromF1 extends DoFn<TableRow, KV<String, TableRow>>{
+	private static class ExtractFromG1 extends DoFn<TableRow, KV<String, TableRow>>{
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow element = context.element();
@@ -43,29 +49,26 @@ public class A6 {
 			context.output(KV.of(finalKey, element));
 		}
 	}
-	
-	interface Options extends PipelineOptions {
-		@Description("Output path for String")
-		@Validation.Required
-		String getOutput();
-		void setOutput(String output);
-	}
+
 	
 	public static void main(String[] args) {
-		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
+		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
 		Pipeline pipeline = Pipeline.create(options);
 		Joins joins = new Joins();
-		
 		A5 a5 = new A5();
-		F1 f1 = new F1();
+		
+		G1 g1 = new G1();
 		
 		PCollection<KV<String, TableRow>> a5PCollection = a5.runIt(pipeline)
 				.apply(ParDo.of(new ExtractFromA5()));
 		
-		PCollection<KV<String, TableRow>> f1PCollection = f1.runIt(pipeline)
-				.apply(ParDo.of(new ExtractFromF1()));
+		PCollection<KV<String, TableRow>> g1PCollection = g1.runIt(pipeline)
+				.apply(ParDo.of(new ExtractFromG1()));
 		
-//		PCollection<TableRow> resultPCollection = joins.leftOuterJoin(a5PCollection, f1PCollection,)
+		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_");
+		
+		resultPCollection.apply(ParDo.of(new ConvertToString()))
+				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
 		
 	}
 	

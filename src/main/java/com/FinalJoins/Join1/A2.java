@@ -1,10 +1,14 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
+import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
+import com.google.cloud.dataflow.sdk.io.TextIO;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
+import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.options.Validation;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
@@ -139,25 +143,25 @@ public class A2 {
 		return a2PCollection;
 	}
 	
-//	public static void main(String[] args) {
-//
-//		Queries queries = new Queries();
-//		Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
-//		Pipeline pipeline = Pipeline.create(options);
-//
-//		A1 a1 = new A1();
-//		B1 b1 = new B1();
-//
-//		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
-//		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
-//
-//		PCollection<TableRow> tempPCollection = joinOperation1(a1PCollection, b1PCollection, "A_", "B_");
-//		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
-//
-//		a2PCollection.apply(ParDo.of(new ConvertToString()))
-//				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-//
-//		pipeline.run();
-//	}
+	public static void main(String[] args) {
+
+		Joins joins = new Joins();
+		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
+		Pipeline pipeline = Pipeline.create(options);
+
+		A1 a1 = new A1();
+		B1 b1 = new B1();
+
+		PCollection<KV<String, TableRow>> a1PCollection = a1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
+		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(pipeline).apply(ParDo.of(new ExtractFromA1_B1()));
+
+		PCollection<TableRow> tempPCollection = joins.innerJoin1(a1PCollection, b1PCollection, "A_", "B_");
+		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
+
+		a2PCollection.apply(ParDo.of(new ConvertToString()))
+				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
+
+		pipeline.run();
+	}
 
 }

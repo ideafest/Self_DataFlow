@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.JobOptions;
 import com.Essential.Joins;
 import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
@@ -105,10 +106,16 @@ public class D1 {
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
 		Joins joins = new Joins();
+		JobOptions jobOptions = (JobOptions) pipeline.getOptions();
 		Queries queries = new Queries();
 		
+		String dncList = "SELECT * FROM [vantage-167009:Xtaas.dnclist]" +
+				"WHERE" +
+				"  updateddate > '" + jobOptions.getStartTime() + "'" +
+				"  AND updateddate < '" + jobOptions.getEndTime() + "'";
+		
 		PCollection<KV<String, TableRow>> dncListPCollection = pipeline
-				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(queries.dncList_Time))
+				.apply(BigQueryIO.Read.named("Source1Reader").fromQuery(dncList))
 				.apply(ParDo.of(new ReadFromDncList()));
 		
 		PCollection<KV<String, TableRow>> cmpgnPCollection = pipeline

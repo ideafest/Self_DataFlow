@@ -1,20 +1,22 @@
 package com.FinalJoins.Join1;
 
-import com.Essential.Joins;
-import com.Essential.Queries;
+import com.Essential.*;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.io.TextIO;
+import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
+import jdk.nashorn.internal.scripts.JO;
 
 import java.util.StringTokenizer;
 
-public class A1 {
-	
+public class A1 //extends Job {
+{
 	static class Extract1 extends DoFn<TableRow, KV<String, TableRow>> {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
@@ -32,6 +34,14 @@ public class A1 {
 			context.output(KV.of(id, context.element()));
 		}
 	}
+	
+	private static class ConvertToString extends DoFn<TableRow, String> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			context.output(context.element().toPrettyString());
+		}
+	}
+	
 	
 	private static String nvl(String prospectCallId, String updatedDate, String code){
 		StringTokenizer stringTokenizer = new StringTokenizer(updatedDate);
@@ -106,21 +116,52 @@ public class A1 {
 	}
 	
 	public PCollection<TableRow> runIt(Pipeline pipeline){
-		
+//
+		JobOptions jobOptions = (JobOptions) pipeline.getOptions();
 		Queries queries = new Queries();
 		Joins joins = new Joins();
-		
-		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(queries.PCI_Time))
+
+		String PC_PCI = "SELECT * FROM [vantage-167009:Xtaas.PC_PCI]\n" +
+				"\tWHERE  updateddate > '"+ jobOptions.getStartTime()
+				+"' AND updateddate < '"+ jobOptions.getEndTime() +"'";
+
+		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(PC_PCI))
 				.apply(ParDo.named("FormatData1").of(new Extract1()));
-		
+
 		PCollection<KV<String, TableRow>> kvpCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status))
 				.apply(ParDo.named("FormatData2").of(new Extract2()));
-		
+
 		PCollection<TableRow> resultPCollection = joins.innerJoin1(kvpCollection1, kvpCollection2, "A_", "B_");
-		
+
 		PCollection<TableRow> result = postOperations(resultPCollection);
-		
+
 		return result;
 	}
-
+	
+//	public static void main(String[] args) {
+//		Queries queries = new Queries();
+//		Joins joins = new Joins();
+//		JobOptions jobOptions = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
+//		Pipeline pipeline = Pipeline.create(jobOptions);
+//
+//		String PC_PCI = "SELECT * FROM [vantage-167009:Xtaas.PC_PCI]\n" +
+//				"\tWHERE  updateddate > '"+ jobOptions.getStartTime()
+//				+"' AND updateddate < '"+ jobOptions.getEndTime() +"'";
+//
+//		PCollection<KV<String, TableRow>> kvpCollection1 = pipeline.apply(BigQueryIO.Read.named("Reader1").fromQuery(PC_PCI))
+//				.apply(ParDo.named("FormatData1").of(new Extract1()));
+//
+//		PCollection<KV<String, TableRow>> kvpCollection2 = pipeline.apply(BigQueryIO.Read.named("Reader2").from(queries.master_status))
+//				.apply(ParDo.named("FormatData2").of(new Extract2()));
+//
+//		PCollection<TableRow> resultPCollection = joins.innerJoin1(kvpCollection1, kvpCollection2, "A_", "B_");
+//
+//		PCollection<TableRow> result = postOperations(resultPCollection);
+//
+//		result.apply(ParDo.of(new ConvertToString()))
+//				.apply(TextIO.Write.to(jobOptions.getOutput()));
+//
+//		pipeline.run();
+//	}
+	
 }

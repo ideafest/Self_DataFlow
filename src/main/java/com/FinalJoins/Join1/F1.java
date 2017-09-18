@@ -444,7 +444,7 @@ public class F1 {
 		PCollection<KV<String, TableRow>> tempPCollection1 = tempJoin1.apply(ParDo.of(new ExtractFromTempJoin1()));
 		
 		PCollection<KV<String, TableRow>> prospectCallPCollection = pipeline
-				.apply(BigQueryIO.Read.named("prospectCall").from(queries.pciProspect))
+				.apply(BigQueryIO.Read.named("pciProspectCall").from(queries.pciProspectCall))
 				.apply(ParDo.of(new ExtractFromProspectCall()));
 		
 		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, prospectCallPCollection, "C_");

@@ -28,7 +28,7 @@ public class Queries {
 			"   FROM ( SELECT row_number()\n" +
 			"          OVER( \n" +
 			"          PARTITION BY prospectcallid\n" +
-			"          ORDER BY updateddate) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, updatedby, version, isdeleted, callbackdate, isdirty\n" +
+			"          ORDER BY updateddate ) AS rnum, _id, _class, prospectcallid, status, createddate, createdby, updateddate, updatedby, version, isdeleted, callbackdate, isdirty\n" +
 			"           FROM [vantage-167009:Xtaas.pci_prospectcallinteraction]) a\n" +
 			"   JOIN ( SELECT derived_table1.prospectcallid, max(derived_table1.rnum) AS rnum, max(derived_table1.updateddate) AS updateddate, min(derived_table1.createddate) AS createddate\n" +
 			"           FROM ( SELECT row_number()\n" +

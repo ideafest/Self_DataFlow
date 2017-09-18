@@ -12,14 +12,14 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
 import com.google.cloud.dataflow.sdk.values.TupleTag;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Joins implements Serializable {
 	
-	public PCollection<TableRow> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
-	                                                  PCollection<KV<String, TableRow>> kvpCollection2,
-	                                                  List<Field> fieldMetaDataList1,
-	                                                  String table1Prefix, String table2Prefix){
+	public static PCollection<TableRow> leftOuterJoin1(PCollection<KV<String, TableRow>> kvpCollection1,
+	                                                   PCollection<KV<String, TableRow>> kvpCollection2,
+	                                                   String table1Prefix, String table2Prefix){
 		
 		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -28,6 +28,8 @@ public class Joins implements Serializable {
 				.of(tupleTag1, kvpCollection1)
 				.and(tupleTag2, kvpCollection2)
 				.apply(CoGroupByKey.create());
+		
+		List<String> fieldList = new ArrayList<>();
 		
 		PCollection<TableRow> resultPCollection = gbkResultPCollection
 				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
@@ -51,6 +53,7 @@ public class Joins implements Serializable {
 										
 										for (String field : tableRow2.keySet()) {
 											freshRow.set(table2Prefix + field, tableRow2.get(field));
+											fieldList.add(field);
 										}
 										context.output(freshRow);
 									}
@@ -61,10 +64,60 @@ public class Joins implements Serializable {
 										freshRow.set(table1Prefix + field, tableRow1.get(field));
 									}
 									
-									for (Field field : fieldMetaDataList1) {
-										freshRow.set(table2Prefix + field.getName(), "null");
+									for (String field : fieldList) {
+										freshRow.set(table2Prefix + field, "null");
 									}
 									context.output(freshRow);
+								}
+							}
+						}
+					}
+				}));
+		return resultPCollection;
+	}
+	
+	public PCollection<TableRow> leftOuterJoin2(PCollection<KV<String, TableRow>> kvpCollection1,
+	                                            PCollection<KV<String, TableRow>> kvpCollection2,
+	                                            String table2Prefix){
+		
+		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
+		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
+		
+		PCollection<KV<String, CoGbkResult>> gbkResultPCollection = KeyedPCollectionTuple
+				.of(tupleTag1, kvpCollection1)
+				.and(tupleTag2, kvpCollection2)
+				.apply(CoGroupByKey.create());
+		
+		List<String> fieldList = new ArrayList<>();
+		
+		PCollection<TableRow> resultPCollection = gbkResultPCollection
+				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						KV<String, CoGbkResult> element = context.element();
+						
+						Iterable<TableRow> rowIterator1 = element.getValue().getAll(tupleTag1);
+						Iterable<TableRow> rowIterator2 = element.getValue().getAll(tupleTag2);
+						
+						
+						
+						if(rowIterator1.spliterator().getExactSizeIfKnown() != 0) {
+							for (TableRow tableRow1 : rowIterator1) {
+								if(rowIterator2.spliterator().getExactSizeIfKnown() != 0) {
+									for (TableRow tableRow2 : rowIterator2) {
+										
+										for (String field : tableRow2.keySet()) {
+											tableRow1.set(table2Prefix + field, tableRow2.get(field));
+											fieldList.add(field);
+										}
+										context.output(tableRow1);
+									}
+								}
+								else{
+									for (String field : fieldList) {
+										tableRow1.set(table2Prefix + field, "null");
+									}
+									context.output(tableRow1);
 								}
 							}
 						}
