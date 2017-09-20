@@ -33,7 +33,32 @@ public class Init {
 	PCollection<TableRow> master_dispositionstatus;
 	PCollection<TableRow> master_substatus;
 	
-	PCollection<TableRow> getJoinOfPC_PCIAndMaster_Status(){
+	PCollection<TableRow> joinOfPC_PCIAndMaster_Status;
+	PCollection<TableRow> joinOfPCIFeedbackResponseListAndPciResponseAttributes;
+	PCollection<TableRow> joinOfProspectCallLogAndProspectCall;
+	
+	
+	
+	
+	void initJoins(){
+		this.joinOfPC_PCIAndMaster_Status = performJoinOfPC_PCIAndMaster_Status();
+		this.joinOfPCIFeedbackResponseListAndPciResponseAttributes = performJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
+		this.joinOfProspectCallLogAndProspectCall = performJoinOfProspectCallLogAndProspectCall();
+	}
+	
+	public PCollection<TableRow> getJoinOfPC_PCIAndMaster_Status() {
+		return joinOfPC_PCIAndMaster_Status;
+	}
+	
+	public PCollection<TableRow> getJoinOfPCIFeedbackResponseListAndPciResponseAttributes() {
+		return joinOfPCIFeedbackResponseListAndPciResponseAttributes;
+	}
+	
+	public PCollection<TableRow> getJoinOfProspectCallLogAndProspectCall() {
+		return joinOfProspectCallLogAndProspectCall;
+	}
+	
+	PCollection<TableRow> performJoinOfPC_PCIAndMaster_Status(){
 		
 		PCollection<KV<String, TableRow>> pcpci = getPC_PCI()
 				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
@@ -60,7 +85,7 @@ public class Init {
 		return joinedPCollection;
 	}
 	
-	PCollection<TableRow> getJoinOfPCIFeebackResponseListAndPciResponseAttributesAndCMPGN(){
+	PCollection<TableRow> performJoinOfPCIFeedbackResponseListAndPciResponseAttributes(){
 		
 		PCollection<KV<String, TableRow>> pciFeedbackResponsePCollection = getPci_feedbackResponseList()
 				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
@@ -88,7 +113,7 @@ public class Init {
 		
 	}
 	
-	PCollection<TableRow> getJoinOfProspectCallLogAndProspectCall(){
+	PCollection<TableRow> performJoinOfProspectCallLogAndProspectCall(){
 	
 		PCollection<KV<String, TableRow>> prospectCallLogPCollection = getProspectCallLog()
 				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {

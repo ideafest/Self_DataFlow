@@ -1,11 +1,7 @@
 package com.FinalJoins.Join1;
 
-import com.Essential.JobOptions;
 import com.Essential.Joins;
-import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
@@ -446,7 +442,7 @@ public class E1 {
 //		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
 //				.apply(ParDo.of(new ReadFromTable1()));
 		
-		PCollection<TableRow> joinResult1 = init.getJoinOfPCIFeebackResponseListAndPciResponseAttributesAndCMPGN();
+		PCollection<TableRow> joinResult1 = init.getJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
 		//with PC_PCI(P) {B._id = P._id}
 		PCollection<KV<String, TableRow>> joinTemp1 = joinResult1
 				.apply(ParDo.of(new ReadFromJoin1()));

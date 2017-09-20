@@ -1,11 +1,7 @@
 package com.FinalJoins.Join1;
 
-import com.Essential.JobOptions;
 import com.Essential.Joins;
-import com.Essential.Queries;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;

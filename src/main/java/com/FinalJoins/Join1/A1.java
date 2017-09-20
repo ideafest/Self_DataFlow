@@ -1,6 +1,5 @@
 package com.FinalJoins.Join1;
 
-import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
