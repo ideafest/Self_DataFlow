@@ -48,8 +48,38 @@ public class A6 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow element = context.element();
-			String key1 = (String) element.get("A_status");
-			context.output(KV.of(key1, element));
+			String key1;
+			if( element.get("A_status") != null) {
+				key1 = (String) element.get("A_status");
+				context.output(KV.of(key1, element));
+			}
+			
+		}
+	}
+	
+	private static class ExtractFromTemp3PCollection extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key1;
+			if( element.get("A_dispositionStatus") != null) {
+				key1 = (String) element.get("A_dispositionStatus");
+				context.output(KV.of(key1, element));
+			}
+			
+		}
+	}
+	
+	private static class ExtractFromTemp5PCollection extends DoFn<TableRow, KV<String, TableRow>>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key1;
+			if(element.get("A_subStatus") != null) {
+				key1 = (String) element.get("A_subStatus");
+				context.output(KV.of(key1, element));
+			}
+			
 		}
 	}
 	
@@ -67,7 +97,40 @@ public class A6 {
 			context.output(KV.of(finalKey, element));
 		}
 	}
-
+	
+	private static class ExtractFromMasterStatus extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key = (String) element.get("code");
+			context.output(KV.of(key, element));
+		}
+	}
+	
+	private static class ExtractFromMasterDispositionStatus extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key = (String) element.get("code");
+			context.output(KV.of(key, element));
+		}
+	}
+	
+	private static class ExtractFromMasterSubStatus extends DoFn<TableRow, KV<String, TableRow>> {
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+			String key = (String) element.get("code");
+			context.output(KV.of(key, element));
+		}
+	}
+	
+	private static class FormatMainQuery extends DoFn<TableRow, TableRow>{
+		@Override
+		public void processElement(ProcessContext context) throws Exception {
+			TableRow element = context.element();
+		}
+	}
 	
 	
 	public static void main(String[] args) {
@@ -91,15 +154,26 @@ public class A6 {
 		
 		PCollection<TableRow> temp1PCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_");
 		
+		PCollection<KV<String, TableRow>> masterStatusPCollection = init.getMaster_status()
+				.apply(ParDo.of(new ExtractFromMasterStatus()));
 		
+		PCollection<KV<String, TableRow>> masterDispositionStatusPCollection = init.getMaster_dispositionstatus()
+				.apply(ParDo.of(new ExtractFromMasterDispositionStatus()));
 		
-		B4 b4 = new B4();
-		PCollection<KV<String, TableRow>> b4PCollection = b4.runIt(init)
-				.apply(ParDo.of(new ExtractFromB4()));
-		
+		PCollection<KV<String, TableRow>> masterSubStatusPCollection = init.getMaster_substatus()
+				.apply(ParDo.of(new ExtractFromMasterSubStatus()));
+	
 		PCollection<KV<String, TableRow>> temp2PCollection = temp1PCollection.apply(ParDo.of(new ExtractFromTemp1PCollection()));
 		
-		PCollection<TableRow> resultPCollection = joins.leftOuterJoin(temp2PCollection, b4PCollection);
+		PCollection<TableRow> temp3PCollection = joins.leftOuterJoin2(temp2PCollection, masterStatusPCollection, "D_");
+		
+		PCollection<KV<String, TableRow>> temp4PCollection = temp3PCollection.apply(ParDo.of(new ExtractFromTemp3PCollection()));
+
+		PCollection<TableRow> temp5PCollection = joins.leftOuterJoin2(temp4PCollection, masterDispositionStatusPCollection, "E_");
+
+		PCollection<KV<String, TableRow>> temp6PCollection = temp5PCollection.apply(ParDo.of(new ExtractFromTemp5PCollection()));
+
+		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(temp6PCollection, masterSubStatusPCollection, "F");
 		
 		resultPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));

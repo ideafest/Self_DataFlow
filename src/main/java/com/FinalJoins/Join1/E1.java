@@ -440,15 +440,13 @@ public class E1 {
 		Joins joins= new Joins();
 		
 		//pci_feedbackresponselist(A) with pci_responseattributes(B) {A._id = B._id & A.INDEX = B.index}
-		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
-				.apply(ParDo.of(new ReadFromTable1()));
+//		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
+//				.apply(ParDo.of(new ReadFromTable1()));
+//
+//		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
+//				.apply(ParDo.of(new ReadFromTable1()));
 		
-		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
-				.apply(ParDo.of(new ReadFromTable1()));
-		
-		PCollection<TableRow> joinResult1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
-				"A_", "B_");
-		
+		PCollection<TableRow> joinResult1 = init.getJoinOfPCIFeebackResponseListAndPciResponseAttributesAndCMPGN();
 		//with PC_PCI(P) {B._id = P._id}
 		PCollection<KV<String, TableRow>> joinTemp1 = joinResult1
 				.apply(ParDo.of(new ReadFromJoin1()));

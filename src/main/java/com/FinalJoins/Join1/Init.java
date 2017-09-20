@@ -1,13 +1,19 @@
 package com.FinalJoins.Join1;
 
 import com.Essential.JobOptions;
+import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.Pipeline;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
+import com.google.cloud.dataflow.sdk.transforms.DoFn;
+import com.google.cloud.dataflow.sdk.transforms.ParDo;
+import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
 public class Init {
 
+	Joins joins = new Joins();
+	
 	PCollection<TableRow> PC_PCI;
 	PCollection<TableRow> master_status;
 	PCollection<TableRow> pci_prospect;
@@ -26,6 +32,89 @@ public class Init {
 	PCollection<TableRow> qa;
 	PCollection<TableRow> master_dispositionstatus;
 	PCollection<TableRow> master_substatus;
+	
+	PCollection<TableRow> getJoinOfPC_PCIAndMaster_Status(){
+		
+		PCollection<KV<String, TableRow>> pcpci = getPC_PCI()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("status");
+						context.output(KV.of(id, context.element()));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> master_status = getMaster_status()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("code");
+						context.output(KV.of(id, context.element()));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pcpci, master_status, "A_", "B_");
+		
+		return joinedPCollection;
+	}
+	
+	PCollection<TableRow> getJoinOfPCIFeebackResponseListAndPciResponseAttributesAndCMPGN(){
+		
+		PCollection<KV<String, TableRow>> pciFeedbackResponsePCollection = getPci_feedbackResponseList()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id") + tableRow.get("index");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = getPci_responseAttributes()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id") + tableRow.get("index");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pciFeedbackResponsePCollection, pciResponseAttributesPCollection, "A_", "B_");
+		
+		return joinedPCollection;
+		
+	}
+	
+	PCollection<TableRow> getJoinOfProspectCallLogAndProspectCall(){
+	
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = getProspectCallLog()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> prospectCallPCollection = getProspectCall()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(prospectCallLogPCollection, prospectCallPCollection, "A_","B_");
+		
+		return joinedPCollection;
+	
+	}
 	
 	void initTables(Pipeline pipeline){
 		
@@ -72,9 +161,9 @@ public class Init {
 				"a.latestprospectidentitychangelogid latestprospectidentitychangelogid, a.isdirty isdirty\n" +
 				"FROM [vantage-167009:Xtaas.pci_prospectcall] a\n" +
 				"JOIN \n" +
-				"[vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
+				"[vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n";// +
+//				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
+//				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
 		
 		
 		String dncList = "SELECT * FROM [vantage-167009:Xtaas.dnclist]" +
@@ -102,16 +191,16 @@ public class Init {
 				"a.extension extension, a.statecode statecode, a.optedin optedin, a.callbacktimeinms callbacktimeinms, a.isdeleted isdeleted,\n" +
 				"a.isdirty isdirty \n" +
 				"   FROM [vantage-167009:Xtaas.pci_prospect] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
+				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n";// +
+//				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
+//				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
 		
 		String answers = "SELECT a._id _id, a.p_prospectcallid p_prospectcallid, a.index index, a.answerskey answerskey, a.answersvalue answersvalue,\n" +
 				"a.isdeleted isdeleted, a.isdirty isdirty\n" +
 				"   FROM [vantage-167009:Xtaas.pci_answers] a\n" +
-				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n" +
-				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
-				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
+				"   JOIN [vantage-167009:Xtaas.prospectcalllog_max] b ON a._id = b._id\n";// +
+//				"where b.updateddate > '" + jobOptions.getStartTime() + "'" +
+//				"and b.updateddate < '" + jobOptions.getEndTime() + "'";
 		
 		String agent = "vantage-167009:Xtaas.agent";
 		String qa = "vantage-167009:Xtaas.qa";

@@ -1,17 +1,12 @@
 package com.FinalJoins.Join1;
 
-import com.Essential.*;
+import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.dataflow.sdk.Pipeline;
-import com.google.cloud.dataflow.sdk.io.BigQueryIO;
-import com.google.cloud.dataflow.sdk.io.TextIO;
-import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
-import jdk.nashorn.internal.scripts.JO;
 
 import java.util.StringTokenizer;
 
@@ -116,16 +111,8 @@ public class A1 //extends Job {
 	}
 	
 	public PCollection<TableRow> runIt(Init init){
-//
-		Joins joins = new Joins();
 
-		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
-				.apply(ParDo.named("FormatData1").of(new Extract1()));
-
-		PCollection<KV<String, TableRow>> masterstatus = init.getMaster_status()
-				.apply(ParDo.named("FormatData2").of(new Extract2()));
-
-		PCollection<TableRow> resultPCollection = joins.innerJoin1(pcpci, masterstatus, "A_", "B_");
+		PCollection<TableRow> resultPCollection = init.getJoinOfPC_PCIAndMaster_Status();
 
 		PCollection<TableRow> result = postOperations(resultPCollection);
 

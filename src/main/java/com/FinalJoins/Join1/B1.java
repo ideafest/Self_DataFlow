@@ -28,7 +28,7 @@ public class B1 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow tableRow = context.element();
-			String id = (String) tableRow.get("A_status");
+			String id = (String) tableRow.get("A__id");
 			context.output(KV.of(id, context.element()));
 		}
 	}
@@ -148,29 +148,34 @@ public class B1 {
 		
 		Joins joins= new Joins();
 		
-		
-		
-		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
-				.apply(ParDo.of(new Extract1()));
+		PCollection<TableRow> joinOfPCPCIAndMaster_Status = init.getJoinOfPC_PCIAndMaster_Status();
 		
 		PCollection<KV<String, TableRow>> pciprospect = init.getPci_prospect()
 				.apply(ParDo.of(new Extract1()));
 		
+		PCollection<KV<String, TableRow>> joinedPCollection = joinOfPCPCIAndMaster_Status.apply(ParDo.of(new Extract2()));
 		
-		PCollection<TableRow> rowPCollection = joins.innerJoin1(pcpci, pciprospect,
-				"A_", "B_");
+		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(joinedPCollection, pciprospect, "C_");
 		
-		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
-				.apply(ParDo.of(new Extract2()));
-		
-		PCollection<KV<String, TableRow>> master_status = init.getMaster_status()
-				.apply(ParDo.of(new Extract3()));
-		
-		PCollection<TableRow> rowPCollection2 = joins.innerJoin2(joinResult1, master_status,
-				"C_");
-		
-		return rowPCollection2.apply(ParDo.of(new Filter()))
+		return finalJoinPCollection.apply(ParDo.of(new Filter()))
 				.apply(ParDo.of(new FinalFieldTableRow()));
+		
+//		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
+//				.apply(ParDo.of(new Extract1()));
+//
+//		PCollection<TableRow> rowPCollection = joins.innerJoin1(pcpci, pciprospect,
+//				"A_", "B_");
+//
+//		PCollection<KV<String, TableRow>> joinResult1 = rowPCollection
+//				.apply(ParDo.of(new Extract2()));
+//
+//		PCollection<KV<String, TableRow>> master_status = init.getMaster_status()
+//				.apply(ParDo.of(new Extract3()));
+//
+//		PCollection<TableRow> rowPCollection2 = joins.innerJoin2(joinResult1, master_status,
+//				"C_");
+		
+	
 	}
 	
 }
