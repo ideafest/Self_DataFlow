@@ -142,7 +142,7 @@ public class A6 {
 		
 		Init init = new Init();
 		init.initTables(pipeline);
-		init.initJoins();
+//		init.initJoins();
 		
 		A5 a5 = new A5();
 		G1 g1 = new G1();

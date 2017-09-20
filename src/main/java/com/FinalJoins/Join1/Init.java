@@ -10,7 +10,9 @@ import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
-public class Init {
+import java.io.Serializable;
+
+public class Init implements Serializable{
 
 	Joins joins = new Joins();
 	
@@ -37,109 +39,6 @@ public class Init {
 	PCollection<TableRow> joinOfPCIFeedbackResponseListAndPciResponseAttributes;
 	PCollection<TableRow> joinOfProspectCallLogAndProspectCall;
 	
-	
-	
-	
-	void initJoins(){
-		this.joinOfPC_PCIAndMaster_Status = performJoinOfPC_PCIAndMaster_Status();
-		this.joinOfPCIFeedbackResponseListAndPciResponseAttributes = performJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
-		this.joinOfProspectCallLogAndProspectCall = performJoinOfProspectCallLogAndProspectCall();
-	}
-	
-	public PCollection<TableRow> getJoinOfPC_PCIAndMaster_Status() {
-		return joinOfPC_PCIAndMaster_Status;
-	}
-	
-	public PCollection<TableRow> getJoinOfPCIFeedbackResponseListAndPciResponseAttributes() {
-		return joinOfPCIFeedbackResponseListAndPciResponseAttributes;
-	}
-	
-	public PCollection<TableRow> getJoinOfProspectCallLogAndProspectCall() {
-		return joinOfProspectCallLogAndProspectCall;
-	}
-	
-	PCollection<TableRow> performJoinOfPC_PCIAndMaster_Status(){
-		
-		PCollection<KV<String, TableRow>> pcpci = getPC_PCI()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("status");
-						context.output(KV.of(id, context.element()));
-					}
-				}));
-		
-		PCollection<KV<String, TableRow>> master_status = getMaster_status()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("code");
-						context.output(KV.of(id, context.element()));
-					}
-				}));
-		
-		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pcpci, master_status, "A_", "B_");
-		
-		return joinedPCollection;
-	}
-	
-	PCollection<TableRow> performJoinOfPCIFeedbackResponseListAndPciResponseAttributes(){
-		
-		PCollection<KV<String, TableRow>> pciFeedbackResponsePCollection = getPci_feedbackResponseList()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("_id") + tableRow.get("index");
-						context.output(KV.of(id, tableRow));
-					}
-				}));
-		
-		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = getPci_responseAttributes()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("_id") + tableRow.get("index");
-						context.output(KV.of(id, tableRow));
-					}
-				}));
-		
-		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pciFeedbackResponsePCollection, pciResponseAttributesPCollection, "A_", "B_");
-		
-		return joinedPCollection;
-		
-	}
-	
-	PCollection<TableRow> performJoinOfProspectCallLogAndProspectCall(){
-	
-		PCollection<KV<String, TableRow>> prospectCallLogPCollection = getProspectCallLog()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("_id");
-						context.output(KV.of(id, tableRow));
-					}
-				}));
-		
-		PCollection<KV<String, TableRow>> prospectCallPCollection = getProspectCall()
-				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
-					@Override
-					public void processElement(ProcessContext context) throws Exception {
-						TableRow tableRow = context.element();
-						String id = (String) tableRow.get("_id");
-						context.output(KV.of(id, tableRow));
-					}
-				}));
-		
-		PCollection<TableRow> joinedPCollection = joins.innerJoin1(prospectCallLogPCollection, prospectCallPCollection, "A_","B_");
-		
-		return joinedPCollection;
-	
-	}
 	
 	void initTables(Pipeline pipeline){
 		
@@ -250,11 +149,12 @@ public class Init {
 		this.qa = pipeline.apply(BigQueryIO.Read.named("qa").from(qa));
 		this.master_dispositionstatus = pipeline.apply(BigQueryIO.Read.named("master_dispositionstatus").from(master_dispositionStatus));
 		this.master_substatus = pipeline.apply(BigQueryIO.Read.named("master_substatus").from(master_SubStatus));
-	}
+		
+		this.joinOfPC_PCIAndMaster_Status = performJoinOfPC_PCIAndMaster_Status();
+		this.joinOfPCIFeedbackResponseListAndPciResponseAttributes = performJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
+		this.joinOfProspectCallLogAndProspectCall = performJoinOfProspectCallLogAndProspectCall();
 	
-//	public PCollection<TableRow> getJoinOfPCPCI_masterstatus(){
-//
-//	}
+	}
 	
 	public PCollection<TableRow> getPC_PCI() {
 		return PC_PCI;
@@ -326,5 +226,108 @@ public class Init {
 	
 	public PCollection<TableRow> getMaster_substatus() {
 		return master_substatus;
+	}
+	
+	
+	void initJoins(){
+		this.joinOfPC_PCIAndMaster_Status = performJoinOfPC_PCIAndMaster_Status();
+		this.joinOfPCIFeedbackResponseListAndPciResponseAttributes = performJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
+		this.joinOfProspectCallLogAndProspectCall = performJoinOfProspectCallLogAndProspectCall();
+	}
+	
+	public PCollection<TableRow> getJoinOfPC_PCIAndMaster_Status() {
+		return joinOfPC_PCIAndMaster_Status;
+	}
+	
+	public PCollection<TableRow> getJoinOfPCIFeedbackResponseListAndPciResponseAttributes() {
+		return joinOfPCIFeedbackResponseListAndPciResponseAttributes;
+	}
+	
+	public PCollection<TableRow> getJoinOfProspectCallLogAndProspectCall() {
+		return joinOfProspectCallLogAndProspectCall;
+	}
+	
+	
+	PCollection<TableRow> performJoinOfPC_PCIAndMaster_Status(){
+		
+		PCollection<KV<String, TableRow>> pcpci = getPC_PCI()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("status");
+						context.output(KV.of(id, context.element()));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> master_status = getMaster_status()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("code");
+						context.output(KV.of(id, context.element()));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pcpci, master_status, "A_", "B_");
+		
+		return joinedPCollection;
+	}
+	
+	PCollection<TableRow> performJoinOfPCIFeedbackResponseListAndPciResponseAttributes(){
+		
+		PCollection<KV<String, TableRow>> pciFeedbackResponsePCollection = getPci_feedbackResponseList()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id") + tableRow.get("index");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = getPci_responseAttributes()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id") + tableRow.get("index");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(pciFeedbackResponsePCollection, pciResponseAttributesPCollection, "A_", "B_");
+		
+		return joinedPCollection;
+		
+	}
+	
+	PCollection<TableRow> performJoinOfProspectCallLogAndProspectCall(){
+		
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = getProspectCallLog()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<KV<String, TableRow>> prospectCallPCollection = getProspectCall()
+				.apply(ParDo.of(new DoFn<TableRow, KV<String, TableRow>>() {
+					@Override
+					public void processElement(ProcessContext context) throws Exception {
+						TableRow tableRow = context.element();
+						String id = (String) tableRow.get("_id");
+						context.output(KV.of(id, tableRow));
+					}
+				}));
+		
+		PCollection<TableRow> joinedPCollection = joins.innerJoin1(prospectCallLogPCollection, prospectCallPCollection, "A_","B_");
+		
+		return joinedPCollection;
+		
 	}
 }
