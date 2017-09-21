@@ -73,12 +73,13 @@ public class C1 {
 
 		Joins joins = new Joins();
 //
-//		PCollection<KV<String, TableRow>> prospectCallLogPCollection = init.getProspectCallLog()
-//				.apply(ParDo.of(new ReadFromTable1()));
-//		PCollection<KV<String, TableRow>> prospectCallPCollection = init.getProspectCall()
-//				.apply(ParDo.of(new ReadFromTable2()));
-		
-		PCollection<TableRow> rowPCollection = init.getJoinOfProspectCallLogAndProspectCall();
+		PCollection<KV<String, TableRow>> prospectCallLogPCollection = init.getProspectCallLog()
+				.apply(ParDo.of(new ReadFromTable1()));
+		PCollection<KV<String, TableRow>> prospectCallPCollection = init.getProspectCall()
+				.apply(ParDo.of(new ReadFromTable2()));
+
+		PCollection<TableRow> rowPCollection = joins.innerJoin1(prospectCallLogPCollection, prospectCallPCollection,
+				"A_", "B_", "JoinOfProspectCallLog_ProspectCall");
 		
 		return rowPCollection.apply(ParDo.of(new Filter()));
 	}

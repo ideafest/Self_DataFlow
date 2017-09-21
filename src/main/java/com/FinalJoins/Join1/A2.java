@@ -133,7 +133,7 @@ public class A2 {
 		PCollection<KV<String, TableRow>> b1PCollection = b1.runIt(init).apply(ParDo.of(new ExtractFromA1_B1()));
 		
 		PCollection<TableRow> tempPCollection = joins.innerJoin1(a1PCollection, b1PCollection, "A_", "B_",
-				"JoiningJoins");
+				"JoiningA1_B1");
 		PCollection<TableRow> a2PCollection = postOperations(tempPCollection);
 		return a2PCollection;
 	}

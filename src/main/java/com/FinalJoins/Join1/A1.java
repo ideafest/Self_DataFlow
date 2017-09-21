@@ -113,8 +113,16 @@ public class A1 //extends Job {
 	public PCollection<TableRow> runIt(Init init){
 		
 		Joins joins = new Joins();
-		PCollection<TableRow> resultPCollection = init.getJoinOfPC_PCIAndMaster_Status();
-
+		
+		PCollection<KV<String, TableRow>> pcpci = init.getPC_PCI()
+				.apply(ParDo.of(new Extract1()));
+		
+		PCollection<KV<String, TableRow>> master_status = init.getMaster_status()
+				.apply(ParDo.of(new Extract2()));
+		
+		PCollection<TableRow> resultPCollection = joins.innerJoin1(pcpci, master_status, "A_", "B_",
+				"JoinOfPCPCI_MasterStatus");
+		
 		PCollection<TableRow> result = postOperations(resultPCollection);
 
 		return result;

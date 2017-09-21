@@ -426,13 +426,14 @@ public class F1 {
 	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
 
-//		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
-//				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
-//
-//		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
-//				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
+		PCollection<KV<String, TableRow>> pciFeedbackResponseListPCollection = init.getPci_feedbackResponseList()
+				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
+
+		PCollection<KV<String, TableRow>> pciResponseAttributesPCollection = init.getPci_responseAttributes()
+				.apply(ParDo.of(new ExtractFromFeedbackResponseList_ResponseAttributes()));
 		
-		PCollection<TableRow> tempJoin1 = init.getJoinOfPCIFeedbackResponseListAndPciResponseAttributes();
+		PCollection<TableRow> tempJoin1 = joins.innerJoin1(pciFeedbackResponseListPCollection, pciResponseAttributesPCollection,
+				"A_","B_", "JoinOfFeedbackResponseList_ReponseAttributes");
 		
 		PCollection<KV<String, TableRow>> tempPCollection1 = tempJoin1.apply(ParDo.of(new ExtractFromTempJoin1()));
 		
