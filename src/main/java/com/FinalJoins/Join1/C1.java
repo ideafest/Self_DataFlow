@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptions;
@@ -70,7 +71,7 @@ public class C1 {
 	
 	public PCollection<TableRow> runIt(Init init) {
 
-//		Joins joins = new Joins();
+		Joins joins = new Joins();
 //
 //		PCollection<KV<String, TableRow>> prospectCallLogPCollection = init.getProspectCallLog()
 //				.apply(ParDo.of(new ReadFromTable1()));

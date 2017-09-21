@@ -113,7 +113,8 @@ public class D1 {
 		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ReadFromCMPGN()));
 		
-		PCollection<TableRow> tempPCollection = joins.innerJoin1(dncListPCollection, cmpgnPCollection, "A_", "B_");
+		PCollection<TableRow> tempPCollection = joins.innerJoin1(dncListPCollection, cmpgnPCollection, "A_", "B_",
+				"JoiningCMPGN");
 		
 		PCollection<TableRow> resultPCollection = tempPCollection.apply(ParDo.of(new SelectFromTempColl()));
 	

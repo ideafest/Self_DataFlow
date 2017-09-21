@@ -1,7 +1,7 @@
 package com.Essential;
 
+import com.FinalJoins.Join1.Init;
 import com.google.api.services.bigquery.model.TableRow;
-import com.google.cloud.bigquery.Field;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.join.CoGbkResult;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Joins implements Serializable {
+	
 	
 	
 	public PCollection<TableRow> leftOuterJoin(PCollection<KV<String, TableRow>> kvpCollection1,
@@ -77,8 +78,9 @@ public class Joins implements Serializable {
 	}
 	
 	public PCollection<TableRow> leftOuterJoin1(PCollection<KV<String, TableRow>> kvpCollection1,
-	                                                   PCollection<KV<String, TableRow>> kvpCollection2,
-	                                                   String table1Prefix, String table2Prefix){
+	                                            PCollection<KV<String, TableRow>> kvpCollection2,
+	                                            String table1Prefix, String table2Prefix,
+	                                            String transformName){
 		
 		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -91,7 +93,7 @@ public class Joins implements Serializable {
 		List<String> fieldList = new ArrayList<>();
 		
 		PCollection<TableRow> resultPCollection = gbkResultPCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named(transformName).of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -137,7 +139,8 @@ public class Joins implements Serializable {
 	
 	public PCollection<TableRow> leftOuterJoin2(PCollection<KV<String, TableRow>> kvpCollection1,
 	                                            PCollection<KV<String, TableRow>> kvpCollection2,
-	                                            String table2Prefix){
+	                                            String table2Prefix,
+	                                            String transformName){
 		
 		TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -150,7 +153,7 @@ public class Joins implements Serializable {
 		List<String> fieldList = new ArrayList<>();
 		
 		PCollection<TableRow> resultPCollection = gbkResultPCollection
-				.apply(ParDo.named("Result").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named(transformName).of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -187,7 +190,8 @@ public class Joins implements Serializable {
 	
 	public PCollection<TableRow> innerJoin1(PCollection<KV<String, TableRow>> stringPCollection1,
 	                                        PCollection<KV<String, TableRow>> stringPCollection2,
-	                                        String table1Prefix, String table2Prefix){
+	                                        String table1Prefix, String table2Prefix,
+	                                        String transformName){
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -198,7 +202,7 @@ public class Joins implements Serializable {
 				.apply(CoGroupByKey.create());
 		
 		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result1").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named(transformName).of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -230,7 +234,8 @@ public class Joins implements Serializable {
 	
 	public PCollection<TableRow> innerJoin2(PCollection<KV<String, TableRow>> stringPCollection1,
 	                                        PCollection<KV<String, TableRow>> stringPCollection2,
-											String table2Prefix){
+											String table2Prefix,
+	                                        String transformName){
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -241,7 +246,7 @@ public class Joins implements Serializable {
 				.apply(CoGroupByKey.create());
 		
 		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named(transformName).of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -269,7 +274,8 @@ public class Joins implements Serializable {
 	                                          PCollection<KV<String, TableRow>> stringPCollection3,
 	                                          PCollection<KV<String, TableRow>> stringPCollection4,
 	                                          String table1Prefix, String table2Prefix,
-	                                          String table3Prefix, String table4Prefix){
+	                                          String table3Prefix, String table4Prefix,
+	                                          String transformName){
 		
 		final TupleTag<TableRow> tupleTag1 = new TupleTag<>();
 		final TupleTag<TableRow> tupleTag2 = new TupleTag<>();
@@ -284,7 +290,7 @@ public class Joins implements Serializable {
 				.apply(CoGroupByKey.create());
 		
 		PCollection<TableRow> resultPCollection = pCollection
-				.apply(ParDo.named("Result2").of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
+				.apply(ParDo.named(transformName).of(new DoFn<KV<String, CoGbkResult>, TableRow>() {
 					@Override
 					public void processElement(ProcessContext context) throws Exception {
 						KV<String, CoGbkResult> element = context.element();
@@ -324,6 +330,7 @@ public class Joins implements Serializable {
 		
 		return resultPCollection;
 	}
+	
 	
 	
 }

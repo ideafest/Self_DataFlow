@@ -124,7 +124,8 @@ public class A3 {
 		PCollection<KV<String, TableRow>> cmpgnTable = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
-		PCollection<TableRow> tempPCollection1 = joins.innerJoin1(a2PCollection, cmpgnTable, "A_", "B_");
+		PCollection<TableRow> tempPCollection1 = joins.innerJoin1(a2PCollection, cmpgnTable, "A_", "B_",
+				"JoiningCMPGN");
 		
 		C1 c1 = new C1();
 		
@@ -132,7 +133,8 @@ public class A3 {
 		
 		PCollection<KV<String, TableRow>> c1PCollection = c1.runIt(init).apply(ParDo.of(new ExtractFromC1()));
 		
-		PCollection<TableRow> tempPCollection2 = joins.innerJoin2(a3PCollection, c1PCollection, "C_");
+		PCollection<TableRow> tempPCollection2 = joins.innerJoin2(a3PCollection, c1PCollection, "C_",
+				"JoiningJoins");
 		
 		PCollection<TableRow> resultPCollection = tempPCollection2.apply(ParDo.of(new SelectFromTempColl2()));
 		return resultPCollection;

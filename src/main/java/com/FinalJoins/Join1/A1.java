@@ -1,5 +1,6 @@
 package com.FinalJoins.Join1;
 
+import com.Essential.Joins;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.GroupByKey;
@@ -110,7 +111,8 @@ public class A1 //extends Job {
 	}
 	
 	public PCollection<TableRow> runIt(Init init){
-
+		
+		Joins joins = new Joins();
 		PCollection<TableRow> resultPCollection = init.getJoinOfPC_PCIAndMaster_Status();
 
 		PCollection<TableRow> result = postOperations(resultPCollection);

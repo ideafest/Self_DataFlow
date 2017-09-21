@@ -439,7 +439,8 @@ public class F1 {
 		PCollection<KV<String, TableRow>> pciProspectCallPCollection = init.getPci_prospectCall()
 				.apply(ParDo.of(new ExtractFromProspectCall()));
 		
-		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, pciProspectCallPCollection, "C_");
+		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempPCollection1, pciProspectCallPCollection, "C_",
+				"JoiningPCIProspectCall");
 		
 		
 		PCollection<KV<String, TableRow>> tempPCollection2 = tempJoin2.apply(ParDo.of(new ExtractFromTempJoin2()));
@@ -447,7 +448,8 @@ public class F1 {
 		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
-		PCollection<TableRow> finalJoinResult = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "D_");
+		PCollection<TableRow> finalJoinResult = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "D_",
+				"JoiningCMPGN");
 		
 		PCollection<TableRow> resultPCollection = postOperations(finalJoinResult);
 		

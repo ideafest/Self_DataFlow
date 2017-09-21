@@ -129,21 +129,16 @@ public class A6 {
 		@Override
 		public void processElement(ProcessContext context) throws Exception {
 			TableRow element = context.element();
+			TableRow freshRow = new TableRow();
+			
+			freshRow.set("campaignId", element.get("A_campaignId"));
+			freshRow.set("campaign", element.get("A_campaign"));
+			
 		}
 	}
 	
-	
-	public static void main(String[] args) {
-		
-		
-		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
-		Pipeline pipeline = Pipeline.create(options);
+	public PCollection<TableRow> runIt(Init init){
 		Joins joins = new Joins();
-		
-		Init init = new Init();
-		init.initTables(pipeline);
-//		init.initJoins();
-		
 		A5 a5 = new A5();
 		G1 g1 = new G1();
 		
@@ -153,7 +148,8 @@ public class A6 {
 		PCollection<KV<String, TableRow>> g1PCollection = g1.runIt(init)
 				.apply(ParDo.of(new ExtractFromG1()));
 		
-		PCollection<TableRow> temp1PCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_");
+		PCollection<TableRow> temp1PCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_",
+				"JoiningJoins");
 		
 		PCollection<KV<String, TableRow>> masterStatusPCollection = init.getMaster_status()
 				.apply(ParDo.of(new ExtractFromMasterStatus()));
@@ -163,23 +159,76 @@ public class A6 {
 		
 		PCollection<KV<String, TableRow>> masterSubStatusPCollection = init.getMaster_substatus()
 				.apply(ParDo.of(new ExtractFromMasterSubStatus()));
-	
+		
 		PCollection<KV<String, TableRow>> temp2PCollection = temp1PCollection.apply(ParDo.of(new ExtractFromTemp1PCollection()));
 		
-		PCollection<TableRow> temp3PCollection = joins.leftOuterJoin2(temp2PCollection, masterStatusPCollection, "D_");
+		PCollection<TableRow> temp3PCollection = joins.leftOuterJoin2(temp2PCollection, masterStatusPCollection, "D_",
+				"JoiningMasterStatus");
 		
 		PCollection<KV<String, TableRow>> temp4PCollection = temp3PCollection.apply(ParDo.of(new ExtractFromTemp3PCollection()));
+		
+		PCollection<TableRow> temp5PCollection = joins.leftOuterJoin2(temp4PCollection, masterDispositionStatusPCollection, "E_",
+				"JoiningMasterDispositionStatus");
+		
+		PCollection<KV<String, TableRow>> temp6PCollection = temp5PCollection.apply(ParDo.of(new ExtractFromTemp5PCollection()));
+		
+		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(temp6PCollection, masterSubStatusPCollection, "F",
+				"JoiningMasterSubStatus");
+		
+		return resultPCollection;
+	}
+	
+	public static void main(String[] args) {
 
-		PCollection<TableRow> temp5PCollection = joins.leftOuterJoin2(temp4PCollection, masterDispositionStatusPCollection, "E_");
+
+		JobOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(JobOptions.class);
+		Pipeline pipeline = Pipeline.create(options);
+		Joins joins = new Joins();
+
+		Init init = new Init();
+		init.initTables(pipeline);
+		init.initJoins(init);
+
+		A5 a5 = new A5();
+		G1 g1 = new G1();
+
+		PCollection<KV<String, TableRow>> a5PCollection = a5.runIt(init)
+				.apply(ParDo.of(new ExtractFromA5()));
+
+		PCollection<KV<String, TableRow>> g1PCollection = g1.runIt(init)
+				.apply(ParDo.of(new ExtractFromG1()));
+
+		PCollection<TableRow> temp1PCollection = joins.leftOuterJoin2(a5PCollection, g1PCollection,"C_",
+				"JoiningJoins");
+
+		PCollection<KV<String, TableRow>> masterStatusPCollection = init.getMaster_status()
+				.apply(ParDo.of(new ExtractFromMasterStatus()));
+
+		PCollection<KV<String, TableRow>> masterDispositionStatusPCollection = init.getMaster_dispositionstatus()
+				.apply(ParDo.of(new ExtractFromMasterDispositionStatus()));
+
+		PCollection<KV<String, TableRow>> masterSubStatusPCollection = init.getMaster_substatus()
+				.apply(ParDo.of(new ExtractFromMasterSubStatus()));
+
+		PCollection<KV<String, TableRow>> temp2PCollection = temp1PCollection.apply(ParDo.of(new ExtractFromTemp1PCollection()));
+
+		PCollection<TableRow> temp3PCollection = joins.leftOuterJoin2(temp2PCollection, masterStatusPCollection, "D_",
+				"JoiningMasterStatus");
+
+		PCollection<KV<String, TableRow>> temp4PCollection = temp3PCollection.apply(ParDo.of(new ExtractFromTemp3PCollection()));
+
+		PCollection<TableRow> temp5PCollection = joins.leftOuterJoin2(temp4PCollection, masterDispositionStatusPCollection, "E_",
+				"JoiningMasterDispositionStatus");
 
 		PCollection<KV<String, TableRow>> temp6PCollection = temp5PCollection.apply(ParDo.of(new ExtractFromTemp5PCollection()));
 
-		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(temp6PCollection, masterSubStatusPCollection, "F");
-		
+		PCollection<TableRow> resultPCollection = joins.leftOuterJoin2(temp6PCollection, masterSubStatusPCollection, "F",
+				"JoiningMasterSubStatus");
+
 		resultPCollection.apply(ParDo.of(new ConvertToString()))
 				.apply(TextIO.Write.named("Writer").to(options.getOutput()));
-		
+
 		pipeline.run();
 	}
-	
+
 }

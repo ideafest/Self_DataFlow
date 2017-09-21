@@ -203,19 +203,22 @@ public class B3 {
 		PCollection<KV<String, TableRow>> cmpgnPCollection = init.getCMPGN()
 				.apply(ParDo.of(new ExtractFromCMPGN()));
 		
-		PCollection<TableRow> tempJoin1 = joins.innerJoin2(b2PCollection, cmpgnPCollection, "C_");
+		PCollection<TableRow> tempJoin1 = joins.innerJoin2(b2PCollection, cmpgnPCollection, "C_",
+				"JoiningCMPGN");
 		
 		PCollection<KV<String, TableRow>> tempJoin1PCollection = tempJoin1.apply(ParDo.of(new ExtractTempJoin1()));
 		PCollection<KV<String, TableRow>> agentPCollection = init.getAgent()
 				.apply(ParDo.of(new ExtractFromAgent()));
 		
-		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempJoin1PCollection, agentPCollection, "D_");
+		PCollection<TableRow> tempJoin2 = joins.innerJoin2(tempJoin1PCollection, agentPCollection, "D_",
+				"JoiningAgent");
 		
 		PCollection<KV<String, TableRow>> tempJoin2PCollection = tempJoin2.apply(ParDo.of(new ExtractTempJoin2()));
 		PCollection<KV<String, TableRow>> qaPCollection = init.getQa()
 				.apply(ParDo.of(new ExtractFromQa()));
 		
-		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(tempJoin2PCollection, qaPCollection, "E_");
+		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(tempJoin2PCollection, qaPCollection, "E_",
+				"JoiningQA");
 		
 		PCollection<TableRow> resultPCollection = postOperations(finalJoinPCollection);
 		

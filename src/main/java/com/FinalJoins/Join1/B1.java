@@ -151,7 +151,8 @@ public class B1 {
 		
 		PCollection<KV<String, TableRow>> joinedPCollection = joinOfPCPCIAndMaster_Status.apply(ParDo.of(new Extract2()));
 		
-		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(joinedPCollection, pciprospect, "C_");
+		PCollection<TableRow> finalJoinPCollection = joins.innerJoin2(joinedPCollection, pciprospect, "C_",
+				"JoinPCIProspect_PCPCI_MasterStatus");
 		
 		return finalJoinPCollection.apply(ParDo.of(new Filter()))
 				.apply(ParDo.of(new FinalFieldTableRow()));

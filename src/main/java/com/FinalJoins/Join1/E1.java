@@ -451,7 +451,7 @@ public class E1 {
 				.apply(ParDo.of(new ReadFromTable2()));
 		
 		PCollection<TableRow> joinResult2 = joins.innerJoin2(joinTemp1, pcpciPCollection,
-				 "C_");
+				 "C_","JoiningPCPCI");
 		
 		//with qafeedbackformattributes(E) {B.attribute = E.attribute}
 		PCollection<KV<String, TableRow>> joinTemp2 = joinResult2
@@ -461,7 +461,7 @@ public class E1 {
 				.apply(ParDo.of(new ReadFromTable3()));
 		
 		PCollection<TableRow> joinResult3 = joins.innerJoin2(joinTemp2, qaFeedbackFormAttributesPCollection,
-				 "D_");
+				 "D_","JoiningQAFeedbackFormAttributes");
 		
 		//with pci_qafeedback(F) {A._id = F._id}
 		PCollection<KV<String, TableRow>> joinTemp3 = joinResult3
@@ -471,7 +471,7 @@ public class E1 {
 				.apply(ParDo.of(new ReadFromTable4()));
 		
 		PCollection<TableRow> joinTemp4 = joins.innerJoin2(joinTemp3, pciQaFeedbackPCollection,
-				 "E_");
+				 "E_","JoiningQAFeedback");
 		
 		//with CMPGN(G) {P.campaignid = G._id}
 		PCollection<KV<String, TableRow>> source9Table = joinTemp4
@@ -481,7 +481,7 @@ public class E1 {
 				.apply(ParDo.of(new ReadFromTable5()));
 		
 		PCollection<TableRow> finalResult = joins.innerJoin2(source9Table, cmpgnPCollection,
-				 "F_");
+				 "F_","JoiningCMPGN");
 		
 		
 		PCollection<TableRow> rowPCollection = finalResult.apply(ParDo.of(new FinalFieldTableRow()));

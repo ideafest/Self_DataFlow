@@ -352,11 +352,13 @@ public class G1 {
 				.apply(ParDo.named("FormatData5").of(new ExtractFromCMPGN()));
 
 		PCollection<TableRow> tempPCollection1 = joins.multiCombine(prospectCallLogPCollection, prospectCallPCollection, prospectPCollection, answersPCollection,
-				"A_", "B_", "C_", "D_");
+				"A_", "B_", "C_", "D_",
+				"MultiJoin");
 
 		PCollection<KV<String, TableRow>> tempPCollection2 = tempPCollection1.apply(ParDo.of(new ReadFromJoinResult3()));
 
-		PCollection<TableRow> result = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "E_");
+		PCollection<TableRow> result = joins.innerJoin2(tempPCollection2, cmpgnPCollection, "E_",
+				"JoiningCMPGN");
 
 
 		PCollection<TableRow> tempPCollection3 = result.apply(ParDo.named("Filter").of(new Filter()))

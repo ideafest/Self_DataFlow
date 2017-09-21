@@ -39,7 +39,8 @@ public class B2 {
 		PCollection<KV<String, TableRow>> pCollection1 = e1.runIt(init).apply(ParDo.of(new ExtractFromE1_F1()));
 		PCollection<KV<String, TableRow>> pCollection2 = f1.runIt(init).apply(ParDo.of(new ExtractFromE1_F1()));
 		
-		PCollection<TableRow> finalResultPCollection = joins.innerJoin1(pCollection1, pCollection2, "A_", "B_");
+		PCollection<TableRow> finalResultPCollection = joins.innerJoin1(pCollection1, pCollection2, "A_", "B_",
+				"JoiningJoins");
 		
 		return finalResultPCollection;
 	}
